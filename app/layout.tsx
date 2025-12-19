@@ -8,6 +8,8 @@ import ModalAvisoConfirmacao from '@/components/ModalAvisoConfirmacao';
 import Navbar from '@/components/Navbar';
 import React from 'react';
 import { PermissoesProvider } from '@/context/PermissoesContext';
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
     title: 'ConciCredit',
@@ -31,6 +33,8 @@ export default function RootLayout({
                             <Toaster />
                             <Navbar>
                                 <main>{children}</main>
+                                <Analytics />
+                                <SpeedInsights />
                             </Navbar>
                         </ModalAvisoConfirmacaoProvider>
                     </LoadingProvider>
