@@ -30,7 +30,7 @@ const message = `
 
 📦 Projeto: ${project}
 🏷️ Versão: ${version}
-🧩 Commit ${commitSha}
+🧩 Commit Id: ${commitSha}
 📝 Mensagem: ${commitMsg}
 🌐 URL: https://app.creditrecoverconciliadora.com.br
 `;
