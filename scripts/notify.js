@@ -26,12 +26,12 @@ if (!token || !chatId) {
 
 // ===== Mensagem =====
 const message = `
-🚀 DEPLOY FINALIZADO
+🚀 *DEPLOY DO FRONT FINALIZADO*
 
 📦 Projeto: ${project}
 🏷️ Versão: ${version}
 🧩 Commit: ${commit}
-🌐 URL: https://${url}
+🌐 URL: https://app.creditrecoverconciliadora.com.br
 `;
 
 // ===== Envio =====
