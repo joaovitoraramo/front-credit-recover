@@ -26,7 +26,7 @@ if (!token || !chatId) {
 
 // ===== Mensagem =====
 const message = `
-🚀 *DEPLOY DO FRONT FINALIZADO*
+🚀 <b>DEPLOY DO FRONT FINALIZADO</b>
 
 📦 Projeto: ${project}
 🏷️ Versão: ${version}
@@ -41,6 +41,7 @@ await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     body: JSON.stringify({
         chat_id: chatId,
         text: message,
+        parse_mode: "HTML"
     }),
 });
 
