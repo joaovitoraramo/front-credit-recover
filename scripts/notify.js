@@ -5,8 +5,8 @@ import fs from "fs";
 const token = process.env.TELEGRAM_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
 const project = process.env.VERCEL_PROJECT_NAME || "Projeto Vercel";
-const url = process.env.VERCEL_URL || "N/A";
-const commit = process.env.VERCEL_GIT_COMMIT_SHA || "desconhecido";
+const commitSha = process.env.VERCEL_GIT_COMMIT_SHA || "desconhecido";
+const commitMsg = process.env.VERCEL_GIT_COMMIT_MESSAGE || "Mensagem não disponível";
 
 // ===== Versão do package.json =====
 let version = "desconhecida";
@@ -30,7 +30,8 @@ const message = `
 
 📦 Projeto: ${project}
 🏷️ Versão: ${version}
-🧩 Commit: ${commit}
+🧩 Commit ${commitSha}
+📝 Mensagem: ${commitMsg}
 🌐 URL: https://app.creditrecoverconciliadora.com.br
 `;
 
