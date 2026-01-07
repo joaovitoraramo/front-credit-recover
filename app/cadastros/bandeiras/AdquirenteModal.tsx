@@ -1,3 +1,5 @@
+// app/cadastros/bandeiras/AdquirenteModal.tsx
+
 "use client";
 
 import {useEffect, useState} from "react";
@@ -28,13 +30,14 @@ export default function AdquirenteModal({
     const [newAdquirente, setNewAdquirente] = useState<Adquirente>({
         id: -1,
         nome: "",
+        nomePlanilha: "",
     });
 
     useEffect(() => {
         if (adquirenteEdit) {
             setNewAdquirente(adquirenteEdit);
         } else if (!isEditingAdquirente) {
-            setNewAdquirente({id: -1, nome: ""});
+            setNewAdquirente({id: -1, nome: "", nomePlanilha: "", });
         }
     }, [adquirenteEdit, isEditingAdquirente]);
 

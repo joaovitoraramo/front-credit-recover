@@ -134,7 +134,7 @@ export default function ({
 
     const [pendingDelete, setPendingDelete] = useState<Set<string>>(new Set());
 
-    const pageSizeOptions = [10, 20, 50, 100];
+    const pageSizeOptions = [10, 20, 50, 100, 1000, 10000];
     const [filterInputs, setFilterInputs] = useState<any>({});
     const [allColumns, setAllColumns] = useState(columns);
     let userEmail: string | null = null;

@@ -1,6 +1,8 @@
+// app/cadastros/bandeiras/BinsModal.tsx
+
 "use client";
 
-import {useState, useEffect} from "react";
+import {useState, useEffect, useMemo, useCallback} from "react";
 import type {Bandeira} from "@/types/bandeira";
 import type {Bin} from "@/types/bin";
 import {X, Plus} from "lucide-react";
@@ -10,7 +12,7 @@ import MensagemPadrao from "@/components/Util/MensagemPadrao";
 import {ColumnDef} from "@tanstack/react-table";
 import InputPadrao from "@/components/Inputs/InputPadrao";
 import DataTablePadrao, {IDataTableProps} from "@/components/Tabelas/DataTablePadrao";
-import {lista} from "@/services/Bin";
+import {lista, listaPorBinETipo} from "@/services/Bin";
 
 interface BinsModalProps {
     bandeira: Bandeira | null;
@@ -30,6 +32,7 @@ export default function BinsModal({
     const [editingBinId, setEditingBinId] = useState<number | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [showAddBinFields, setShowAddBinFields] = useState(false);
+    const MemoizedDataTable = React.memo(DataTablePadrao);
 
     useEffect(() => {
         if (bandeira && bandeira.bins) {
@@ -51,9 +54,9 @@ export default function BinsModal({
                 }
                 const filtro = {
                     "bin": newBin.bin,
-                    "tipo": newBin.tipo,
+                    "tipo": bandeira.tipo,
                 }
-                const consultaBin = await lista(filtro);
+                const consultaBin = await listaPorBinETipo(filtro);
                 if (consultaBin) {
                     for (const e of consultaBin) {
                         if (e.bandeira.id !== bandeira.id) {
@@ -201,7 +204,7 @@ export default function BinsModal({
                         <h3 className="text-lg font-medium text-gray-900 mb-2">
                             BINs Cadastrados
                         </h3>
-                        <DataTablePadrao {...dataTableProps} />
+                        <MemoizedDataTable {...dataTableProps} />
                     </div>
                     <div className="mt-6 flex justify-end">
                         <BotaoPadrao
