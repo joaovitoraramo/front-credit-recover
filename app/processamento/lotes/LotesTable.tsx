@@ -1,16 +1,13 @@
 "use client"
 
-import {useState, useEffect} from "react"
-import {
-    createColumnHelper,
-    type PaginationState, ColumnDef,
-} from "@tanstack/react-table"
 import type React from "react"
+import {useEffect, useState} from "react"
+import {ColumnDef, createColumnHelper, type PaginationState,} from "@tanstack/react-table"
 import DataTablePadrao, {ISelectedRowsAction} from "@/components/Tabelas/DataTablePadrao";
-import {parseISO, format} from "date-fns"
+import {format, parseISO} from "date-fns"
 import {LoteReadDTO} from "@/types/lote";
 import {Badge} from '@/components/ui/badge'
-import {Activity, Archive, ArrowRightLeft, Coins, Layers, Move, RotateCw, TrendingUp, Undo} from "lucide-react";
+import {Archive, ArrowRightLeft, Layers, RotateCw, Undo} from "lucide-react";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
 import {ExportColumn} from "@/types/export";
 
@@ -62,6 +59,13 @@ export default function LotesTable({
         }),
         columnHelper.accessor("bandeira.nome", {
             header: "Bandeira",
+            cell: (info) => info.getValue(),
+            meta: {
+                buttonFilter: false,
+            }
+        }),
+        columnHelper.accessor("adquirente.nome", {
+            header: "Adquirente",
             cell: (info) => info.getValue(),
             meta: {
                 buttonFilter: false,

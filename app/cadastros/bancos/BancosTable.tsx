@@ -1,14 +1,13 @@
 "use client"
 
-import {useState, useEffect} from "react"
-import {
-    createColumnHelper,
-    type PaginationState, ColumnDef,
-} from "@tanstack/react-table"
+import React, {useEffect, useState} from "react"
+import {ColumnDef, createColumnHelper, type PaginationState,} from "@tanstack/react-table"
 import type {Banco} from "@/types/banco"
 import DataTablePadrao from "@/components/Tabelas/DataTablePadrao";
 import BancoModal from "@/app/cadastros/bancos/BancoModal";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
+import Image from "next/image";
+import {stringSvgToDataUrl} from "@/components/Util/utils";
 
 interface BancosTableProps {
     data: Banco[]
@@ -22,6 +21,20 @@ interface BancosTableProps {
 const columnHelper = createColumnHelper<Banco>()
 
 const columns = [
+    columnHelper.accessor('logo', {
+        header: 'Logo',
+        cell: (info) => (
+            <Image
+                src={stringSvgToDataUrl(info.getValue())}
+                alt={'Sem Logo'}
+                width={48}
+                height={48}
+                style={{
+                    marginBottom: 8,
+                }}
+            />
+        ),
+    }),
     columnHelper.accessor("id", {
         header: "ID",
         cell: (info) => info.getValue(),
