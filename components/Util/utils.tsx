@@ -2,6 +2,9 @@
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import * as XLSX from "xlsx";
+import {saveAs} from "file-saver";
+import {ExportColumn} from "@/types/export";
 
 export const formatDisplayDate = (date: Date | null) => {
     return date ? format(date, 'dd/MM/yyyy', { locale: ptBR }) : '';
@@ -67,4 +70,49 @@ export function stringSvgToDataUrl(svgString: string | undefined) {
         return `data:image/svg+xml,${encodedSvg}`;
     }
     return '';
+}
+
+export function downloadExcel<T>(
+    data: T[],
+    columns: ExportColumn<T>[],
+    options?: {
+        fileName?: string;
+        sheetName?: string;
+    }
+): boolean {
+    if (!data?.length || !columns?.length) {
+        return false;
+    }
+
+    const header = columns.map(col => col.header);
+
+    const body = data.map(row =>
+        columns.map(col => col.accessor(row))
+    );
+
+    const worksheet = XLSX.utils.aoa_to_sheet([
+        header,
+        ...body,
+    ]);
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        options?.sheetName ?? 'Dados'
+    );
+
+    const wbout = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array',
+    });
+
+    const date = new Date().toISOString().slice(0, 10);
+
+    saveAs(
+        new Blob([wbout], { type: 'application/octet-stream' }),
+        options?.fileName ?? `export_${date}.xlsx`
+    );
+
+    return true;
 }

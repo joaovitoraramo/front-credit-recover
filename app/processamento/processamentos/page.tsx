@@ -7,16 +7,18 @@ import FilterProcessamentosModal from "@/app/processamento/processamentos/Filter
 import ImportProcessamentosModal from "@/app/processamento/processamentos/ImportProcessamentosModal"
 import {Processamento, ProcessamentoDTO, ProcessamentoFilter} from "@/types/processamento"
 import type {PaginationState} from "@tanstack/react-table"
-import {Search, Upload, Download, Plus, RefreshCcw} from "lucide-react"
+import {Search, Upload, Download, Plus, RefreshCcw, FileDown, Loader2} from "lucide-react"
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import {useLoading} from "@/context/LoadingContext";
 import {atualiza, cadastra, deleta, lista, reprocessar} from "@/services/Processamento";
 import {useToast} from "@/hooks/use-toast";
-import * as XLSX from 'xlsx';
 import {IncludeProcessamentoModal} from "@/app/processamento/processamentos/IncludeProcessamentoModal";
 import {useModalAvisoConfirmacao} from "@/context/ModalAvisoConfirmacaoContext";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
+import {ExportColumn, ExportStatus} from "@/types/export";
+import {downloadExcel} from "@/components/Util/utils";
+import ModalExportar from "@/components/ModalExportar";
 
 export default function ProcessamentosPage() {
     const router = useRouter()
@@ -39,6 +41,14 @@ export default function ProcessamentosPage() {
     const [showInclude, setShowInclude] = useState(false);
     const {setIsOpen, setTitulo, setDescricao, confirmacao, setConfirmacao} = useModalAvisoConfirmacao();
     const [idDeleta, setIdDeleta] = useState<number | null>(null);
+    const [exportStatus, setExportStatus] = useState<ExportStatus>('idle');
+    const [exportData, setExportData] = useState<Processamento[]>([]);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportFilter, setExportFilter] = useState<ProcessamentoFilter | null>(null);
+    const [exportColumns, setExportColumns] = useState<ExportColumn<Processamento>[]>([]);
+
+
+
 
     useEffect(() => {
         if (filter.dataInicial || filter.dataFinal || filter.bandeiraIds.length > 0) {
@@ -100,53 +110,6 @@ export default function ProcessamentosPage() {
         setAtualizarLista(!atualizarLista)
         setShowInclude(true)
     }
-
-    const handleExport = async () => {
-
-        const wsData = processamentos.map((p) => [
-            p.dataTransacao,
-            p.horaTransacao,
-            p.dataPagamento,
-            p.nsuHost,
-            p.cliente.nomeFantasia,
-            p.bin,
-            p.bandeira.nome,
-            p.bandeira.tipo,
-            p.qtdeParcelas,
-            p.parcela,
-            p.valorTotal,
-            p.valorParcela,
-            p.totalTaxa,
-            p.valorLiquido,
-            p.lancManual ? 'Sim' : 'Não',
-        ]);
-
-        const ws = XLSX.utils.aoa_to_sheet([
-            [
-                'Data Transação',
-                'Hora Transação',
-                'Data Pagamento',
-                'Identificação',
-                'Cliente',
-                'Bin',
-                'Bandeira',
-                'Tipo',
-                'Qtde Parcelas',
-                'Parcela',
-                'Valor Total',
-                'Valor Parcela',
-                'Total Taxa',
-                'Valor Líquido',
-                'Lanç. Manual',
-            ],
-            ...wsData,
-        ]);
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Processamentos');
-
-        XLSX.writeFile(wb, 'processamentos.xlsx');
-    };
 
     const handleFiltroAction = async (filtro: any) => {
         setFilter({
@@ -216,6 +179,58 @@ export default function ProcessamentosPage() {
         }
     }
 
+    const handleExportFilter = async (filtro: ProcessamentoFilter) => {
+        setShowExportModal(false);
+        setExportStatus('loading');
+
+        try {
+            const allData: Processamento[] = [];
+
+            const firstResponse = await lista({
+                pagination: {
+                    pageIndex: 0,
+                    pageSize: 100000,
+                },
+                filter: filtro,
+            });
+
+            allData.push(...firstResponse.content);
+
+            const totalPages = firstResponse.totalPages;
+
+            for (let page = 1; page < totalPages; page++) {
+                const response = await lista({
+                    pagination: {
+                        pageIndex: page,
+                        pageSize: 100000,
+                    },
+                    filter: filtro,
+                });
+
+                allData.push(...response.content);
+            }
+
+            setExportData(allData);
+            setExportFilter(filtro);
+            setExportStatus('ready');
+        } catch (error) {
+            console.error('Erro ao exportar processamentos', error);
+            setExportStatus('error');
+        }
+    };
+
+    const handleDownloadExcel = () => {
+        const success = downloadExcel<Processamento>(
+            exportData,
+            exportColumns
+        );
+
+        if (success) {
+            setExportStatus('idle');
+            setExportData([]);
+        }
+    }
+
     useEffect(() => {
         if (confirmacao) {
             onDeleteAction();
@@ -254,10 +269,62 @@ export default function ProcessamentosPage() {
                             />
                         )}
                         <BotaoPadrao
-                            variant="outline"
-                            onClick={handleExport}
-                            icon={<Download className="w-4 h-4 font-bold"/>}
-                            name={"Exportar"}
+                            icon={
+                                exportStatus === 'loading' ? (
+                                    <Loader2 className="animate-spin" />
+                                ) : exportStatus === 'ready' ? (
+                                    <FileDown />
+                                ) : (
+                                    <Download />
+                                )
+                            }
+                            name={
+                                exportStatus === 'loading'
+                                    ? 'Processando...'
+                                    : exportStatus === 'ready'
+                                        ? 'Baixar Excel'
+                                        : 'Exportar'
+                            }
+                            variant={
+                                exportStatus === 'ready'
+                                    ? 'outline'
+                                    : exportStatus === 'loading'
+                                        ? 'destructive'
+                                        : 'outline'
+                            }
+                            className={
+                                exportStatus === 'ready'
+                                    ? `
+                                      bg-green-600
+                                      text-white
+                                      border-green-600
+                                      hover:bg-green-700
+                                      hover:border-green-700
+                                      shadow-md
+                                      hover:shadow-lg
+                                      transition-all
+                                    `
+                                                                    : exportStatus === 'loading'
+                                                                        ? `
+                                        bg-yellow-100
+                                        text-yellow-800
+                                        border-yellow-300
+                                        cursor-wait
+                                        opacity-90
+                                      `
+                                                                        : `
+                                        transition-all
+                                        hover:shadow-sm
+                                      `
+                            }
+                            disabled={exportStatus === 'loading'}
+                            onClick={() => {
+                                if (exportStatus === 'ready') {
+                                    handleDownloadExcel();
+                                } else {
+                                    setShowExportModal(true);
+                                }
+                            }}
                         />
                         {useCheckPermission(1036, false) && (
                             <BotaoPadrao
@@ -280,10 +347,20 @@ export default function ProcessamentosPage() {
                             onFiltroAction={handleFiltroAction}
                             onEditAction={handleEditProcessamentoAction}
                             onReprocessarAction={handleReprocessarVendas}
+                            onExportColumnsChange={setExportColumns}
                         />
                     </div>
                 )}
             </div>
+            {initialFilterDone && (
+                <ModalExportar
+                    open={showExportModal}
+                    onOpenChange={setShowExportModal}
+                    initialFilter={filter}
+                    onConfirm={handleExportFilter}
+                    titulo={'Processamentos'}
+                />
+            )}
             <FilterProcessamentosModal
                 open={showFilter}
                 onOpenChange={handleFilterCancel}

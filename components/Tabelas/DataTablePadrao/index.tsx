@@ -54,6 +54,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import {ExportColumn} from "@/types/export";
 
 export interface IDataTableProps {
     data: any[];
@@ -79,6 +80,7 @@ export interface IDataTableProps {
     canContextOpen?: boolean;
     columnsToTotalize?: { id: string; accessorKey: string }[];
     showExportButton?: boolean;
+    onExportColumnsChange?: (columns: ExportColumn<any>[]) => void;
 }
 
 export interface ISelectedRowsAction {
@@ -111,6 +113,7 @@ export default function ({
                              canContextOpen,
                              columnsToTotalize = [],
                              showExportButton = false,
+    onExportColumnsChange
                          }: IDataTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>(
         defaultSortColumn
@@ -293,6 +296,32 @@ export default function ({
         pageCount,
         manualPagination: true,
     });
+
+    useEffect(() => {
+        if (!onExportColumnsChange) return;
+
+        const excluded = ['select', 'actions', 'expander'];
+
+        const exportColumns = table
+            .getVisibleFlatColumns()
+            .filter(col => !excluded.includes(col.id))
+            .map(col => ({
+                id: col.id,
+                header:
+                    typeof col.columnDef.header === 'string'
+                        ? col.columnDef.header
+                        : col.id,
+                accessor: (row: any) => {
+                    return row[col.id];
+                },
+            }));
+
+        onExportColumnsChange(exportColumns);
+    }, [
+        table.getState().columnVisibility,
+        allColumns, // ordem
+    ]);
+
 
     const handleExportExcel = () => {
         const excludedColumnIds = ['select', 'actions', 'expander'];

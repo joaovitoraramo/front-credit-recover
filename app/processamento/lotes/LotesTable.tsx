@@ -12,6 +12,7 @@ import {LoteReadDTO} from "@/types/lote";
 import {Badge} from '@/components/ui/badge'
 import {Activity, Archive, ArrowRightLeft, Coins, Layers, Move, RotateCw, TrendingUp, Undo} from "lucide-react";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
+import {ExportColumn} from "@/types/export";
 
 
 interface LotesTableProps {
@@ -25,6 +26,7 @@ interface LotesTableProps {
     onReprocessarTodasAction: (lote: LoteReadDTO[]) => void
     onTransferirAction: (lote: LoteReadDTO[]) => void
     onEncargosAction: (lote: LoteReadDTO[]) => void
+    onExportColumnsChange?: (columns: ExportColumn<LoteReadDTO>[]) => void;
 }
 
 const columnHelper = createColumnHelper<LoteReadDTO>()
@@ -40,7 +42,8 @@ export default function LotesTable({
                                        onReprocessarTodasAction,
                                        onReverterBaixaAction,
                                        onTransferirAction,
-                                       onEncargosAction
+                                       onEncargosAction,
+    onExportColumnsChange
                                    }: LotesTableProps) {
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
@@ -194,7 +197,7 @@ export default function LotesTable({
                     }
                 ].filter(Boolean) as ISelectedRowsAction[]}
                 columnsToTotalize={columnsToTotalize}
-                showExportButton
+                onExportColumnsChange={onExportColumnsChange}
             />
         </div>
     )

@@ -1,27 +1,21 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import type { Processamento } from '@/types/processamento';
-import Link from 'next/link';
-import { ExternalLink, Save } from 'lucide-react';
-import { Bandeira } from '@/types/bandeira';
+import React, {useCallback, useEffect, useState} from 'react';
+import {Dialog, DialogContent, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {Card, CardContent} from '@/components/ui/card';
+import type {Processamento} from '@/types/processamento';
+import {ExternalLink, Save} from 'lucide-react';
+import {Bandeira} from '@/types/bandeira';
 import InputItensCombobox from '@/components/Inputs/InputItensCombo';
-import { listaPorClienteTipo } from '@/services/Bandeira';
-import { Badge } from '@/components/ui/badge';
+import {listaPorClienteTipo} from '@/services/Bandeira';
+import {Badge} from '@/components/ui/badge';
 import BotaoPadrao from '@/components/Botoes/BotaoPadrao';
-import { useModalAvisoConfirmacao } from '@/context/ModalAvisoConfirmacaoContext';
+import {useModalAvisoConfirmacao} from '@/context/ModalAvisoConfirmacaoContext';
 import InputPadrao from '@/components/Inputs/InputPadrao';
-import { lista } from '@/services/Bin';
+import {lista} from '@/services/Bin';
 import MensagemPadrao from '@/components/Util/MensagemPadrao';
-import { useRouter } from 'next/navigation';
+import {useRouter} from 'next/navigation';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -269,7 +263,7 @@ export function ViewProcessamentoModal({
             )}
             {renderInfo(
                 'Taxa',
-                `${processamento.taxa.toFixed(2)}%`,
+                `${(processamento.taxa ?? 0).toFixed(2)}%`,
                 true,
                 'default',
             )}

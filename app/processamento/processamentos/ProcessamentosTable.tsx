@@ -12,6 +12,7 @@ import DataTablePadrao, {ISelectedRowsAction} from "@/components/Tabelas/DataTab
 import {parseISO, format} from "date-fns"
 import {Badge} from "@/components/ui/badge";
 import {Archive, ArrowRightLeft, RotateCw, Undo} from "lucide-react";
+import {ExportColumn} from "@/types/export";
 
 
 interface ProcessamentosTableProps {
@@ -27,6 +28,7 @@ interface ProcessamentosTableProps {
     onReverterBaixaAction?: (processamentos: Processamento[]) => void,
     disableFilter?: boolean
     onTransferirProcessamentoAction?: (processamento: Processamento[]) => void,
+    onExportColumnsChange?: (columns: ExportColumn<Processamento>[]) => void;
 }
 
 const columnHelper = createColumnHelper<Processamento>()
@@ -45,6 +47,7 @@ export default function ProcessamentosTable({
                                                 onReverterBaixaAction,
                                                 onTransferirProcessamentoAction,
                                                 disableFilter = false,
+    onExportColumnsChange
                                             }: ProcessamentosTableProps) {
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
@@ -235,6 +238,7 @@ export default function ProcessamentosTable({
                 selectedRowsAction={selectedRowsAction}
                 canContextOpen
                 columnsToTotalize={columnsToTotalize}
+                onExportColumnsChange={onExportColumnsChange}
             />
             <ViewProcessamentoModal
                 processamento={processamento}

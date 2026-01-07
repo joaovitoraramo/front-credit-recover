@@ -4,11 +4,9 @@ import {useState, useEffect, useCallback} from "react"
 import {useRouter} from "next/navigation"
 import LotesTable from "@/app/processamento/lotes/LotesTable"
 import FilterLotesModal from "@/app/processamento/lotes/FilterLotesModal"
-import Navbar from "@/components/Navbar"
-import Drawer from "@/components/Drawer"
 import {Processamento, ProcessamentoFilter} from "@/types/processamento"
 import type {PaginationState} from "@tanstack/react-table"
-import {Search, RefreshCcw} from "lucide-react"
+import {Search, RefreshCcw, Loader2, FileDown, Download} from "lucide-react"
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import {useLoading} from "@/context/LoadingContext";
@@ -29,6 +27,9 @@ import TransferLotesModal from "@/app/processamento/lotes/TransferLotesModal";
 import EncargosLoteModal from "@/app/processamento/lotes/EncargosLoteModal";
 import {useModalAvisoConfirmacao} from "@/context/ModalAvisoConfirmacaoContext";
 import TransferProcessamentoModal from "@/app/processamento/lotes/TransferProcessamentoModal";
+import {ExportColumn, ExportStatus} from "@/types/export";
+import {downloadExcel} from "@/components/Util/utils";
+import ModalExportar from "@/components/ModalExportar";
 
 export default function LotesPage() {
     const router = useRouter()
@@ -64,6 +65,11 @@ export default function LotesPage() {
     const [openModalEncargos, setOpenModalEncargo] = useState<boolean>(false);
     const {setIsOpen, setTitulo, setDescricao, confirmacao, setConfirmacao} = useModalAvisoConfirmacao();
     const [idDeleta, setIdDeleta] = useState<number | null>(null);
+    const [exportStatus, setExportStatus] = useState<ExportStatus>('idle');
+    const [exportData, setExportData] = useState<LoteReadDTO[]>([]);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportFilter, setExportFilter] = useState<ProcessamentoFilter | null>(null);
+    const [exportColumns, setExportColumns] = useState<ExportColumn<LoteReadDTO>[]>([]);
 
     useEffect(() => {
         if (filter.dataInicial || filter.dataFinal || filter.bandeiraIds.length > 0) {
@@ -245,6 +251,58 @@ export default function LotesPage() {
         }
     }
 
+    const handleDownloadExcel = () => {
+        const success = downloadExcel<LoteReadDTO>(
+            exportData,
+            exportColumns
+        );
+
+        if (success) {
+            setExportStatus('idle');
+            setExportData([]);
+        }
+    }
+
+    const handleExportFilter = async (filtro: ProcessamentoFilter) => {
+        setShowExportModal(false);
+        setExportStatus('loading');
+
+        try {
+            const allData: LoteReadDTO[] = [];
+
+            const firstResponse = await lista({
+                pagination: {
+                    pageIndex: 0,
+                    pageSize: 100000,
+                },
+                filter: filtro,
+            });
+
+            allData.push(...firstResponse.content);
+
+            const totalPages = firstResponse.totalPages;
+
+            for (let page = 1; page < totalPages; page++) {
+                const response = await lista({
+                    pagination: {
+                        pageIndex: page,
+                        pageSize: 100000,
+                    },
+                    filter: filtro,
+                });
+
+                allData.push(...response.content);
+            }
+
+            setExportData(allData);
+            setExportFilter(filtro);
+            setExportStatus('ready');
+        } catch (error) {
+            console.error('Erro ao exportar lotes', error);
+            setExportStatus('error');
+        }
+    };
+
     useEffect(() => {
         if (confirmacao) {
             onDeleteAction();
@@ -272,6 +330,64 @@ export default function LotesPage() {
                                     icon={<RefreshCcw className="w-4 h-4 font-bold"/>}
                                     name={"Atualizar"}
                                 />
+                                <BotaoPadrao
+                                    icon={
+                                        exportStatus === 'loading' ? (
+                                            <Loader2 className="animate-spin" />
+                                        ) : exportStatus === 'ready' ? (
+                                            <FileDown />
+                                        ) : (
+                                            <Download />
+                                        )
+                                    }
+                                    name={
+                                        exportStatus === 'loading'
+                                            ? 'Processando...'
+                                            : exportStatus === 'ready'
+                                                ? 'Baixar Excel'
+                                                : 'Exportar'
+                                    }
+                                    variant={
+                                        exportStatus === 'ready'
+                                            ? 'outline'
+                                            : exportStatus === 'loading'
+                                                ? 'destructive'
+                                                : 'outline'
+                                    }
+                                    className={
+                                        exportStatus === 'ready'
+                                            ? `
+                                      bg-green-600
+                                      text-white
+                                      border-green-600
+                                      hover:bg-green-700
+                                      hover:border-green-700
+                                      shadow-md
+                                      hover:shadow-lg
+                                      transition-all
+                                    `
+                                            : exportStatus === 'loading'
+                                                ? `
+                                        bg-yellow-100
+                                        text-yellow-800
+                                        border-yellow-300
+                                        cursor-wait
+                                        opacity-90
+                                      `
+                                                : `
+                                        transition-all
+                                        hover:shadow-sm
+                                      `
+                                    }
+                                    disabled={exportStatus === 'loading'}
+                                    onClick={() => {
+                                        if (exportStatus === 'ready') {
+                                            handleDownloadExcel();
+                                        } else {
+                                            setShowExportModal(true);
+                                        }
+                                    }}
+                                />
                             </div>
                         )}
                     </div>
@@ -295,10 +411,20 @@ export default function LotesPage() {
                                 setLotesEncargos(e);
                                 setOpenModalEncargo(true);
                             }}
+                            onExportColumnsChange={setExportColumns}
                         />
                     </div>
                 )}
             </div>
+            {initialFilterDone && (
+                <ModalExportar
+                    open={showExportModal}
+                    onOpenChange={setShowExportModal}
+                    initialFilter={filter}
+                    onConfirm={handleExportFilter}
+                    titulo={'Lotes'}
+                />
+            )}
             <FilterLotesModal
                 open={showFilter}
                 onOpenChange={handleFilterCancel}
