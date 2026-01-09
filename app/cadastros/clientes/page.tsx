@@ -1,6 +1,6 @@
 "use client"
 
-import {useState, useEffect} from "react"
+import {useEffect, useState} from "react"
 import ClientesTable from "@/app/cadastros/clientes/ClientesTable"
 import {Plus} from "lucide-react"
 import type {Client as Cliente, ClienteDTO} from "@/types/client"
@@ -8,7 +8,7 @@ import type {PaginationState} from "@tanstack/react-table"
 import ClienteModal from "@/app/cadastros/clientes/ClienteModal"
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
-import {lista, cadastra, atualiza, deleta} from '@/services/Cliente';
+import {atualiza, cadastra, deleta, lista} from '@/services/Cliente';
 import {useLoading} from "@/context/LoadingContext";
 import {useToast} from "@/hooks/use-toast";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
@@ -60,6 +60,7 @@ export default function ClientsPage() {
             senhaSitef: edited.senhaSitef,
             loginSitef: edited.loginSitef,
             bandeirasCliente: edited.bandeirasCliente.map(bandeira => ({
+                id: bandeira.id,
                 agencia: bandeira.agencia && bandeira.agencia,
                 conta: bandeira.conta,
                 clienteId: edited.id,
