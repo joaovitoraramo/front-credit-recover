@@ -8,7 +8,7 @@ import type {PaginationState} from "@tanstack/react-table"
 import ClienteModal from "@/app/cadastros/clientes/ClienteModal"
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
-import {atualiza, cadastra, deleta, lista} from '@/services/Cliente';
+import {atualiza, cadastra, deleta, listaPaginavel} from '@/services/Cliente';
 import {useLoading} from "@/context/LoadingContext";
 import {useToast} from "@/hooks/use-toast";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
@@ -36,7 +36,7 @@ export default function ClientsPage() {
         setIsLoading(true);
 
         try {
-            const retorno = await lista(filtro, pagination);
+            const retorno = await listaPaginavel(filtro, pagination);
             setClients(retorno.content);
             setPageCount(retorno.totalPages);
             return retorno;
