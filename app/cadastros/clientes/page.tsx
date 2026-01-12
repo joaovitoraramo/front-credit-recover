@@ -1,6 +1,6 @@
 "use client"
 
-import {useEffect, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import ClientesTable from "@/app/cadastros/clientes/ClientesTable"
 import {Plus} from "lucide-react"
 import type {Client as Cliente, ClienteDTO} from "@/types/client"
@@ -25,15 +25,48 @@ export default function ClientsPage() {
     const {setIsLoading} = useLoading();
     const {toast} = useToast();
     const [atualizarTabela, setAtualizarTabela] = useState<boolean>(false);
+    const isFetchingRef = useRef(false);
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const ultimoFiltroRef = useRef<any>(null);
 
     const fetchClients = async (filtro: any | null) => {
+        if (isFetchingRef.current) return;
+
+        isFetchingRef.current = true;
         setIsLoading(true);
-        const retorno = await lista(filtro);
-        setClients(retorno)
-        setPageCount(Math.ceil(retorno.length / pagination.pageSize))
-        setIsLoading(false);
-        return retorno;
-    }
+
+        try {
+            const retorno = await lista(filtro);
+            setClients(retorno);
+            setPageCount(Math.ceil(retorno.length / pagination.pageSize));
+            return retorno;
+        } finally {
+            isFetchingRef.current = false;
+            setIsLoading(false);
+        }
+    };
+
+    const filtroValido = (filtro: any) => {
+        if (!filtro) return false;
+
+        return Object.values(filtro).some(
+            (v) => v !== null && v !== undefined && String(v).trim() !== ""
+        );
+    };
+
+
+    const debounceFetch = (filtro: any) => {
+        ultimoFiltroRef.current = filtro;
+
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+
+        debounceRef.current = setTimeout(() => {
+            fetchClients(ultimoFiltroRef.current);
+        }, 500);
+    };
+
 
     useEffect(() => {
         fetchClients(null);
@@ -138,7 +171,10 @@ export default function ClientsPage() {
     }
 
     const handleFiltroAction = async (filtro: any) => {
-        await fetchClients(filtro);
+        if (!filtroValido(filtro)) {
+            return;
+        }
+        debounceFetch(filtro);
     }
 
 
