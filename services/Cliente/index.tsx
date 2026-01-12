@@ -1,17 +1,28 @@
 'use client';
 
-import { deletaPadrao, getPadrao, postPadrao, putPadrao } from '@/services';
-import { Client as Cliente, ClienteDTO } from '@/types/client';
+import {deletaPadrao, getPadrao, postPadrao, putPadrao} from '@/services';
+import {Client as Cliente, ClienteDTO} from '@/types/client';
 
-export async function lista(filtro: any | null) {
-    let uri = `${process.env.NEXT_PUBLIC_API_URL}/cliente`;
+export async function lista(
+    filtro: Record<string, any> | null,
+    pagination: { pageIndex: number; pageSize: number }
+) {
+    const params = new URLSearchParams();
 
-    for (const key in filtro) {
-        if (filtro.hasOwnProperty(key)) {
-            const value = filtro[key];
-            uri = `${process.env.NEXT_PUBLIC_API_URL}/cliente?${key}=${value}`;
-        }
+    // filtros
+    if (filtro) {
+        Object.entries(filtro).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && String(value).trim() !== "") {
+                params.append(key, String(value));
+            }
+        });
     }
+
+    // paginação Spring
+    params.append("page", String(pagination.pageIndex));
+    params.append("size", String(pagination.pageSize));
+
+    const uri = `${process.env.NEXT_PUBLIC_API_URL}/cliente?${params.toString()}`;
 
     return await getPadrao(uri);
 }

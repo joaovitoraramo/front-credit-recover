@@ -36,9 +36,9 @@ export default function ClientsPage() {
         setIsLoading(true);
 
         try {
-            const retorno = await lista(filtro);
-            setClients(retorno);
-            setPageCount(Math.ceil(retorno.length / pagination.pageSize));
+            const retorno = await lista(filtro, pagination);
+            setClients(retorno.content);
+            setPageCount(retorno.totalPages);
             return retorno;
         } finally {
             isFetchingRef.current = false;
@@ -69,8 +69,8 @@ export default function ClientsPage() {
 
 
     useEffect(() => {
-        fetchClients(null);
-    }, [pagination, atualizarTabela])
+        fetchClients(ultimoFiltroRef.current);
+    }, [pagination.pageIndex, pagination.pageSize, atualizarTabela]);
 
     const handleEdit = async (edited: Cliente) => {
         let put: Partial<ClienteDTO> = {
