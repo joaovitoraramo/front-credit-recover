@@ -2,7 +2,7 @@
 
 import {useEffect, useRef, useState} from "react"
 import ClientesTable from "@/app/cadastros/clientes/ClientesTable"
-import {Plus} from "lucide-react"
+import {Plus, X} from "lucide-react"
 import type {Client as Cliente, ClienteDTO} from "@/types/client"
 import type {PaginationState} from "@tanstack/react-table"
 import ClienteModal from "@/app/cadastros/clientes/ClienteModal"
@@ -52,6 +52,25 @@ export default function ClientsPage() {
         return Object.values(filtro).some(
             (v) => v !== null && v !== undefined && String(v).trim() !== ""
         );
+    };
+
+    const handleLimparFiltros = async () => {
+        // limpa referência de filtro
+        ultimoFiltroRef.current = null;
+
+        // cancela debounce pendente
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+
+        // volta para a primeira página
+        setPagination((prev) => ({
+            ...prev,
+            pageIndex: 0,
+        }));
+
+        // busca sem filtro (lista completa)
+        await fetchClients(null);
     };
 
 
@@ -182,16 +201,27 @@ export default function ClientsPage() {
         <div className="min-h-screen bg-gray-100">
             <div className="p-8 ml-16 transition-all duration-300">
                 <div className="flex justify-between items-center mb-6">
-                    <TituloPadrao tamanho='h2' titulo='Cadastro de Clientes'/>
-                    {useCheckPermission(1033, false) && (
-                        <BotaoPadrao
-                            onClick={() => setIsAddModalOpen(true)}
-                            name='Adicionar Cliente'
-                            icon={<Plus className="h-5 w-5 mr-2"/>}
-                            variant='outline'
-                        />
-                    )}
+                    <TituloPadrao tamanho="h2" titulo="Cadastro de Clientes" />
 
+                    <div className="flex items-center gap-2">
+                        {ultimoFiltroRef.current !== null && (
+                            <BotaoPadrao
+                                onClick={handleLimparFiltros}
+                                name="Limpar filtros"
+                                variant="ghost"
+                                icon={<X className="h-4 w-4 mr-2" />}
+                            />
+                        )}
+
+                        {useCheckPermission(1033, false) && (
+                            <BotaoPadrao
+                                onClick={() => setIsAddModalOpen(true)}
+                                name="Adicionar Cliente"
+                                icon={<Plus className="h-5 w-5 mr-2" />}
+                                variant="outline"
+                            />
+                        )}
+                    </div>
                 </div>
                 <div className="bg-white shadow-md rounded-lg overflow-hidden">
                     <ClientesTable
