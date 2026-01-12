@@ -2,20 +2,16 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-    createColumnHelper,
-    type PaginationState,
-    ColumnDef,
-} from '@tanstack/react-table';
-import type { Bandeira, TModalidade } from '@/types/bandeira';
+import React, {useEffect, useState} from 'react';
+import {ColumnDef, createColumnHelper, type PaginationState,} from '@tanstack/react-table';
+import type {Bandeira, TModalidade} from '@/types/bandeira';
 import DataTablePadrao from '@/components/Tabelas/DataTablePadrao';
 import BandeiraModal from '@/app/cadastros/bandeiras/BandeiraModal';
-import { Badge } from '@/components/ui/badge';
-import { colunaModalidade } from '@/lib/utils';
-import { stringSvgToDataUrl, SvgDisplay } from '@/components/Util/utils';
+import {Badge} from '@/components/ui/badge';
+import {colunaModalidade} from '@/lib/utils';
+import {stringSvgToDataUrl} from '@/components/Util/utils';
 import Image from 'next/image';
-import { useCheckPermission } from '@/hooks/useCheckPermission';
+import {useCheckPermission} from '@/hooks/useCheckPermission';
 
 interface BandeirasTableProps {
     data: Bandeira[];

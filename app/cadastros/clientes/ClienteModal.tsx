@@ -1,6 +1,6 @@
 "use client"
-import {useState, useEffect, useCallback} from "react"
-import type {Client} from "@/types/client"
+import {useCallback, useEffect, useState} from "react"
+import {Client, STATUS_CLIENTE_LABEL, StatusCliente} from "@/types/client"
 import type {Contabilidade} from "@/types/contabilidade"
 import type {BandeirasCliente} from "@/types/bandeirasCliente"
 import {CreditCard, Globe, Info, Plus, Save, X} from "lucide-react"
@@ -47,6 +47,7 @@ export default function ClienteModal({
         senhaSitef: "",
         linkSitef: "",
         contabilidade: undefined,
+        status: "NORMAL",
     })
     const [contabilidades, setContabilidades] = useState<Contabilidade[]>([])
     const [filteredContabilidades, setFilteredContabilidades] = useState<Contabilidade[]>([])
@@ -210,6 +211,13 @@ export default function ClienteModal({
         });
     };
 
+    const STATUS_OPTIONS = Object.entries(STATUS_CLIENTE_LABEL).map(
+        ([value, label]) => ({
+            value: value as StatusCliente,
+            label,
+        })
+    );
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg p-8 max-w-7xl w-full max-h-[90vh] overflow-y-auto">
@@ -294,6 +302,68 @@ export default function ClienteModal({
                                 />
                                 {errors.contabilidade &&
                                     <p className="text-red-500 text-xs mt-1">{errors.contabilidade}</p>}
+                            </div>
+                            <div className="col-span-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Status do cliente
+                                </label>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    {Object.entries(STATUS_CLIENTE_LABEL).map(([value, label]) => {
+                                        const status = value as StatusCliente;
+                                        const selected = newClient.status === status;
+
+                                        return (
+                                            <div
+                                                key={status}
+                                                onClick={() =>
+                                                    setNewClient((prev) => ({
+                                                        ...prev,
+                                                        status,
+                                                    }))
+                                                }
+                                                className={`
+                        cursor-pointer rounded-xl border p-4
+                        transition-all duration-200
+                        flex items-center gap-3
+                        ${selected
+                                                    ? "border-primary bg-primary/5 shadow-sm"
+                                                    : "border-gray-200 hover:shadow-md hover:-translate-y-[1px]"}
+                    `}
+                                            >
+                                                <div
+                                                    className={`
+                            h-10 w-10 rounded-lg flex items-center justify-center
+                            ${selected
+                                                        ? "bg-primary text-white"
+                                                        : "bg-gray-100 text-gray-500"}
+                        `}
+                                                >
+                                                    {/** ícone opcional */}
+                                                    {status === "NORMAL" && <Info className="h-5 w-5" />}
+                                                    {status === "BLOQUEADO" && <X className="h-5 w-5" />}
+                                                    {status === "INATIVO" && <Globe className="h-5 w-5" />}
+                                                </div>
+
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-semibold">{label}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {status === "NORMAL" && "Cliente ativo e operando normalmente"}
+                                                        {status === "BLOQUEADO" && "Cliente bloqueado para operações"}
+                                                        {status === "INATIVO" && "Cliente inativo no sistema"}
+                                                    </p>
+                                                </div>
+
+                                                <input
+                                                    type="radio"
+                                                    checked={selected}
+                                                    onChange={() => {}}
+                                                    className="accent-primary"
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     )}

@@ -1,20 +1,13 @@
 "use client"
 
-import React, {useState, useEffect} from "react"
-import {
-    useReactTable,
-    getCoreRowModel,
-    flexRender,
-    createColumnHelper,
-    type PaginationState, ColumnDef,
-} from "@tanstack/react-table"
-import {Edit, ChevronLeft, ChevronRight} from "lucide-react"
-import type {Client as Cliente} from "@/types/client"
-import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
+import React, {useEffect, useState} from "react"
+import {ColumnDef, createColumnHelper, type PaginationState,} from "@tanstack/react-table"
+import type {Client as Cliente, StatusCliente} from "@/types/client"
 import ClienteModal from "@/app/cadastros/clientes/ClienteModal";
-import type {Contabilidade} from "@/types/contabilidade";
 import DataTablePadrao from "@/components/Tabelas/DataTablePadrao";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
+import {CheckCircle, Lock, LucideIcon, PauseCircle} from "lucide-react";
+import {Badge} from '@/components/ui/badge';
 
 interface ClientsTableProps {
     data: Cliente[]
@@ -27,7 +20,50 @@ interface ClientsTableProps {
 
 const columnHelper = createColumnHelper<Cliente>()
 
+const statusConfig: Record<
+    StatusCliente,
+    {
+        label: string;
+        icon: LucideIcon;
+        className: string;
+    }
+> = {
+    NORMAL: {
+        label: "Normal",
+        icon: CheckCircle,
+        className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    },
+    BLOQUEADO: {
+        label: "Bloqueado",
+        icon: Lock,
+        className: "bg-red-50 text-red-700 border border-red-200",
+    },
+    INATIVO: {
+        label: "Inativo",
+        icon: PauseCircle,
+        className: "bg-slate-100 text-slate-700 border border-slate-200",
+    },
+};
+
+
 const columns = [
+    columnHelper.accessor("status", {
+        header: "Status",
+        cell: (info) => {
+            const status = info.getValue() as StatusCliente;
+
+            const { label, icon: Icon, className } = statusConfig[status];
+
+            return (
+                <Badge
+                    className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium ${className}`}
+                >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    {label}
+                </Badge>
+            );
+        },
+    }),
     columnHelper.accessor("id", {
         header: "ID",
         cell: (info) => info.getValue(),
@@ -93,7 +129,6 @@ const columns = [
             buttonFilter: true
         }
     }),
-
 ] as ColumnDef<Cliente>[];
 
 export default function ClientesTable({

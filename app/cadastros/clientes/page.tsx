@@ -2,8 +2,8 @@
 
 import {useEffect, useRef, useState} from "react"
 import ClientesTable from "@/app/cadastros/clientes/ClientesTable"
-import {Plus, X} from "lucide-react"
-import type {Client as Cliente, ClienteDTO} from "@/types/client"
+import {Filter, Layers, Plus, X} from "lucide-react"
+import {Client as Cliente, ClienteDTO, STATUS_CLIENTE_LABEL, STATUS_ICONS, StatusCliente} from "@/types/client"
 import type {PaginationState} from "@tanstack/react-table"
 import ClienteModal from "@/app/cadastros/clientes/ClienteModal"
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
@@ -28,6 +28,9 @@ export default function ClientsPage() {
     const isFetchingRef = useRef(false);
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const ultimoFiltroRef = useRef<any>(null);
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+    const [statusFiltro, setStatusFiltro] = useState<StatusCliente | null>(null);
+    const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
 
     const fetchClients = async (filtro: any | null) => {
         if (isFetchingRef.current) return;
@@ -55,37 +58,52 @@ export default function ClientsPage() {
     };
 
     const handleLimparFiltros = async () => {
-        // limpa referência de filtro
         ultimoFiltroRef.current = null;
+        setStatusFiltro(null);
 
-        // cancela debounce pendente
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
         }
 
-        // volta para a primeira página
         setPagination((prev) => ({
             ...prev,
             pageIndex: 0,
         }));
 
-        // busca sem filtro (lista completa)
         await fetchClients(null);
     };
 
+    const aplicarFiltroStatus = async () => {
+        setPagination((prev) => ({
+            ...prev,
+            pageIndex: 0,
+        }));
 
-    const debounceFetch = (filtro: any) => {
-        ultimoFiltroRef.current = filtro;
+        await fetchClients(buildFiltro());
+    };
+
+    const buildFiltro = (override?: Record<string, any>) => {
+        return {
+            ...(ultimoFiltroRef.current ?? {}),
+            ...(override ?? {}),
+            status: statusFiltro,
+        };
+    };
+
+    const debounceFetch = (novoFiltro: any) => {
+        ultimoFiltroRef.current = {
+            ...(ultimoFiltroRef.current ?? {}),
+            ...novoFiltro,
+        };
 
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
         }
 
         debounceRef.current = setTimeout(() => {
-            fetchClients(ultimoFiltroRef.current);
+            fetchClients(buildFiltro());
         }, 500);
     };
-
 
     useEffect(() => {
         fetchClients(ultimoFiltroRef.current);
@@ -127,6 +145,7 @@ export default function ClientsPage() {
                 encargos: bandeira.encargos
             })),
             adicionais: edited.adicionais,
+            status: edited.status
         };
         const updated = await atualiza(put);
         toast({
@@ -177,6 +196,7 @@ export default function ClientsPage() {
                 encargos: bandeira.encargos
             })),
             adicionais: newObjeto.adicionais,
+            status: newObjeto.status
         }
         const added = await cadastra(post);
         toast({
@@ -196,6 +216,19 @@ export default function ClientsPage() {
         debounceFetch(filtro);
     }
 
+    const openStatusModal = () => {
+        setIsStatusModalVisible(true);
+        requestAnimationFrame(() => {
+            setIsStatusModalOpen(true);
+        });
+    };
+
+    const closeStatusModal = () => {
+        setIsStatusModalOpen(false);
+        setTimeout(() => {
+            setIsStatusModalVisible(false);
+        }, 200); // mesmo tempo da animação
+    };
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -212,7 +245,12 @@ export default function ClientsPage() {
                                 icon={<X className="h-4 w-4 mr-2" />}
                             />
                         )}
-
+                        <BotaoPadrao
+                            icon={<Filter className="h-5 w-5 mr-2" />}
+                            onClick={openStatusModal}
+                            name="Status"
+                            variant="outline"
+                        />
                         {useCheckPermission(1033, false) && (
                             <BotaoPadrao
                                 onClick={() => setIsAddModalOpen(true)}
@@ -234,6 +272,150 @@ export default function ClientsPage() {
                     />
                 </div>
             </div>
+            {isStatusModalVisible && (
+                <div
+                    className={`
+            fixed inset-0 z-50 flex items-center justify-center
+            bg-black/40
+            transition-opacity duration-200
+            ${isStatusModalOpen ? "opacity-100" : "opacity-0"}
+        `}
+                    onClick={closeStatusModal}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className={`
+                bg-white rounded-xl shadow-2xl w-[380px] p-6
+                transform transition-all duration-200
+                ${isStatusModalOpen
+                            ? "scale-100 opacity-100"
+                            : "scale-95 opacity-0"}
+            `}
+                    >
+                        <h3 className="text-lg font-semibold mb-1">
+                            Filtrar por status
+                        </h3>
+
+                        <p className="text-sm text-gray-500 mb-4">
+                            Selecione um status para filtrar os clientes
+                        </p>
+
+                        <div className="space-y-3">
+                            {/* TODOS */}
+                            <div
+                                onClick={() => setStatusFiltro(null)}
+                                className={`
+                        group cursor-pointer rounded-lg border
+                        p-3 flex items-center justify-between
+                        transition-all
+                        ${statusFiltro === null
+                                    ? "border-primary bg-primary/5 shadow-sm"
+                                    : "border-gray-200 hover:shadow-md hover:-translate-y-[1px]"}
+                    `}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div
+                                        className={`
+                                h-9 w-9 rounded-md flex items-center justify-center
+                                ${statusFiltro === null
+                                            ? "bg-primary text-white"
+                                            : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"}
+                            `}
+                                    >
+                                        <Layers className="h-4 w-4" />
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm font-medium">Todos</p>
+                                        <p className="text-xs text-gray-500">
+                                            Mostrar todos os clientes
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <input
+                                    type="radio"
+                                    checked={statusFiltro === null}
+                                    onChange={() => setStatusFiltro(null)}
+                                    className="accent-primary"
+                                />
+                            </div>
+
+                            <div className="h-px bg-gray-200" />
+
+                            {/* STATUS DINÂMICOS */}
+                            {Object.entries(STATUS_CLIENTE_LABEL).map(([value, label]) => {
+                                const status = value as StatusCliente;
+                                const selected = statusFiltro === status;
+                                const Icon = STATUS_ICONS[status];
+
+                                return (
+                                    <div
+                                        key={status}
+                                        onClick={() => setStatusFiltro(status)}
+                                        className={`
+                                group cursor-pointer rounded-lg border
+                                p-3 flex items-center justify-between
+                                transition-all
+                                ${selected
+                                            ? "border-primary bg-primary/5 shadow-sm"
+                                            : "border-gray-200 hover:shadow-md hover:-translate-y-[1px]"}
+                            `}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className={`
+                                        h-9 w-9 rounded-md flex items-center justify-center
+                                        ${selected
+                                                    ? "bg-primary text-white"
+                                                    : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"}
+                                    `}
+                                            >
+                                                <Icon className="h-4 w-4" />
+                                            </div>
+
+                                            <div>
+                                                <p className="text-sm font-medium">
+                                                    {label}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    Status {label.toLowerCase()}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <input
+                                            type="radio"
+                                            checked={selected}
+                                            onChange={() => setStatusFiltro(status)}
+                                            className="accent-primary"
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+                            <BotaoPadrao
+                                name="Cancelar"
+                                variant="ghost"
+                                onClick={closeStatusModal}
+                            />
+
+                            <BotaoPadrao
+                                name="Aplicar filtro"
+                                variant="outline"
+                                onClick={() => {
+                                    aplicarFiltroStatus();
+                                    closeStatusModal();
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
             <ClienteModal
                 isOpen={isAddModalOpen}
                 onCloseAction={() => setIsAddModalOpen(false)}
