@@ -22,30 +22,25 @@ interface IPerfilUsuario {
 }
 
 interface PermissoesState {
-    usuario: IUsuario;
+    usuario: IUsuario | null;
     setUsuario: (usuario: IUsuario) => void;
+    hasHydrated: boolean;
+    setHasHydrated: (value: boolean) => void;
 }
 
 export const usePermissoesStore = create<PermissoesState>()(
     persist(
         (set) => ({
-            usuario: {
-                icone: '',
-                nome: '',
-                email: '',
-                permissoes: [],
-                perfil: {
-                    nome: '',
-                    email: '',
-                    id: -1,
-                },
-                token: '',
-                isSuporte: false,
-            },
+            usuario: null,
             setUsuario: (usuario) => set({ usuario }),
+            hasHydrated: false,
+            setHasHydrated: (value) => set({ hasHydrated: value })
         }),
         {
             name: 'permissoes-storage',
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            },
         },
     ),
 );

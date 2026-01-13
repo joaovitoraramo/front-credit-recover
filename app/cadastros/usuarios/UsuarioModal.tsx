@@ -1,10 +1,10 @@
 "use client"
 
-import {useState, useEffect, useCallback} from "react"
+import type React from "react"
+import {useCallback, useEffect, useState} from "react"
 import type {Usuario} from "@/types/usuario"
 import type {Client as Cliente} from "@/types/client"
-import {Plus, Save, X, CheckCircle2, XCircle} from "lucide-react"
-import type React from "react"
+import {CheckCircle2, Plus, Save, X, XCircle} from "lucide-react"
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import InputPadrao from "@/components/Inputs/InputPadrao";
@@ -286,9 +286,6 @@ export default function UsuarioModal({
                                     <Plus className="h-5 w-5 mr-2"/>}
                                 name={isEditingUsuario ? 'Salvar Alterações' : 'Adicionar Usuario'}
                             />
-                            {isButtonDisabled && (
-                                <div className="absolute inset-0 z-20 bg-gray-100 opacity-50 cursor-not-allowed rounded-md"></div>
-                            )}
                         </div>
                     </div>
                 </form>

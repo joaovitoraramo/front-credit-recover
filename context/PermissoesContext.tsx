@@ -11,5 +11,6 @@ export const PermissoesProvider = ({children}: { children: ReactNode }) => {
 export const usePermissoes = () => {
     const usuario = usePermissoesStore((state) => state.usuario);
     const setUsuario = usePermissoesStore((state) => state.setUsuario);
-    return {usuario, setUsuario};
+    const hasHydrated = usePermissoesStore((state) => state.hasHydrated);
+    return {usuario, setUsuario, hasHydrated};
 };
