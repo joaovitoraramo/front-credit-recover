@@ -124,6 +124,10 @@ export default function PerfilPage() {
             );
 
             showToast("Perfil atualizado com sucesso.", "success");
+            showToast(
+                "Faça logout e entre novamente para visualizar as alterações.",
+                "warning"
+            );
 
             setSenha("");
             setConfirmarSenha("");
