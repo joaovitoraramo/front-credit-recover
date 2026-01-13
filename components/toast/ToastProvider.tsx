@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
-import { Toast, ToastType } from "./Toast";
+import {createContext, ReactNode, useContext, useState} from "react";
+import {Toast, ToastType} from "./Toast";
+import {generateUUID} from "@/components/Util/uuid";
 
 interface ToastItem {
     id: string;
@@ -19,7 +20,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<ToastItem[]>([]);
 
     function showToast(message: string, type: ToastType = "success") {
-        const id = crypto.randomUUID();
+        const id = generateUUID();
         setToasts((prev) => [...prev, { id, message, type }]);
     }
 
