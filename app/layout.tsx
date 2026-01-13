@@ -1,15 +1,15 @@
-import type { Metadata } from 'next';
+import type {Metadata} from 'next';
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
-import { LoadingProvider } from '@/context/LoadingContext';
+import {LoadingProvider} from '@/context/LoadingContext';
 import Loading from '@/components/Loading';
-import { ModalAvisoConfirmacaoProvider } from '@/context/ModalAvisoConfirmacaoContext';
+import {ModalAvisoConfirmacaoProvider} from '@/context/ModalAvisoConfirmacaoContext';
 import ModalAvisoConfirmacao from '@/components/ModalAvisoConfirmacao';
 import Navbar from '@/components/Navbar';
 import React from 'react';
-import { PermissoesProvider } from '@/context/PermissoesContext';
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import {PermissoesProvider} from '@/context/PermissoesContext';
+import {Analytics} from "@vercel/analytics/next"
+import {SpeedInsights} from "@vercel/speed-insights/next"
+import {ToastProvider} from "@/components/toast/ToastProvider";
 
 export const metadata: Metadata = {
     title: 'ConciCredit',
@@ -25,20 +25,21 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body>
-                <PermissoesProvider>
-                    <LoadingProvider>
-                        <ModalAvisoConfirmacaoProvider>
-                            <Loading />
-                            <ModalAvisoConfirmacao />
-                            <Toaster />
-                            <Navbar>
-                                <main>{children}</main>
-                                <Analytics />
-                                <SpeedInsights />
-                            </Navbar>
-                        </ModalAvisoConfirmacaoProvider>
-                    </LoadingProvider>
-                </PermissoesProvider>
+                <ToastProvider>
+                    <PermissoesProvider>
+                        <LoadingProvider>
+                            <ModalAvisoConfirmacaoProvider>
+                                <Loading />
+                                <ModalAvisoConfirmacao />
+                                <Navbar>
+                                    <main>{children}</main>
+                                    <Analytics />
+                                    <SpeedInsights />
+                                </Navbar>
+                            </ModalAvisoConfirmacaoProvider>
+                        </LoadingProvider>
+                    </PermissoesProvider>
+                </ToastProvider>
             </body>
         </html>
     );

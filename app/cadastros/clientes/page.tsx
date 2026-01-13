@@ -10,8 +10,8 @@ import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import {atualiza, cadastra, deleta, listaPaginavel} from '@/services/Cliente';
 import {useLoading} from "@/context/LoadingContext";
-import {useToast} from "@/hooks/use-toast";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
+import {useToast} from "@/components/toast/ToastProvider";
 
 export default function ClientsPage() {
     useCheckPermission(1032, true);
@@ -23,7 +23,6 @@ export default function ClientsPage() {
     })
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const {setIsLoading} = useLoading();
-    const {toast} = useToast();
     const [atualizarTabela, setAtualizarTabela] = useState<boolean>(false);
     const isFetchingRef = useRef(false);
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -31,6 +30,7 @@ export default function ClientsPage() {
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [statusFiltro, setStatusFiltro] = useState<StatusCliente | null>(null);
     const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
+    const { showToast } = useToast();
 
     const fetchClients = async (filtro: any | null) => {
         if (isFetchingRef.current) return;
@@ -148,11 +148,7 @@ export default function ClientsPage() {
             status: edited.status
         };
         const updated = await atualiza(put);
-        toast({
-            title: 'Clientes',
-            description: 'Atualização de cliente realizada com sucesso.',
-            className: 'p-4 relative flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary bg-white',
-        })
+        showToast("Atualização de cliente realizada com sucesso.", "success");
         setClients(clients.map((client) => (client.id === updated.id ? updated : client)))
         setAtualizarTabela(!atualizarTabela);
     }
@@ -199,11 +195,7 @@ export default function ClientsPage() {
             status: newObjeto.status
         }
         const added = await cadastra(post);
-        toast({
-            title: 'Clientes',
-            description: 'Cadastro de cliente realizado com sucesso.',
-            className: 'p-4 relative flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary bg-white',
-        })
+        showToast("Cadastro de cliente realizado com sucesso.", "success");
         setClients([...clients, added])
         setIsAddModalOpen(false)
         setAtualizarTabela(!atualizarTabela);

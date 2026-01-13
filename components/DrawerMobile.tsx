@@ -1,103 +1,200 @@
-"use client";
+"use client"
 
-import {useState} from "react";
-import Link from "next/link";
-import {useRouter} from "next/navigation";
-import {
-    Home,
-    DollarSign,
-    BarChart2,
-    Settings,
-    Menu,
-    ChevronRight,
-    Users,
-    BookOpen,
-    UserPlus,
-    Landmark,
-    CreditCard,
-    BriefcaseBusiness,
-    Wallet,
-    ImageIcon as AdquirenteIcon,
-} from "lucide-react";
-import {IDrawerProps} from "@/components/DrawerDesktop";
+import {useState} from "react"
+import Link from "next/link"
+import {usePathname, useRouter} from "next/navigation"
+import {ChevronDown, LucideIcon} from "lucide-react"
 
-export default function DrawerMobile({isOpen, setIsOpen, menuItems}: IDrawerProps) {
-    const router = useRouter();
-    const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
-    const [isCadastrosExpanded, setIsCadastrosExpanded] = useState<boolean>(false);
-    const [isProcessamentoExpanded, setIsProcessamentoExpanded] = useState<boolean>(false);
+export interface SubMenuItem {
+    icon: LucideIcon
+    label: string
+    href: string
+}
 
-    const handleMenuItemClick = (item: any) => {
-        if (item.subItems) {
-            if (item.label === "Cadastros") {
-                setIsCadastrosExpanded(!isCadastrosExpanded);
-            } else if (item.label === "Processamento") {
-                setIsProcessamentoExpanded(!isProcessamentoExpanded);
-            } else {
-                setOpenSubmenu(openSubmenu === item.label ? null : item.label);
-            }
-        }
-    };
+export interface MenuItem {
+    icon: LucideIcon
+    label: string
+    href?: string
+    subItems?: SubMenuItem[]
+}
+
+export interface DrawerMobileProps {
+    isOpen: boolean
+    setIsOpen: (open: boolean) => void
+    menuItems: MenuItem[]
+}
+
+export default function DrawerMobile({
+                                         isOpen,
+                                         setIsOpen,
+                                         menuItems,
+                                     }: DrawerMobileProps) {
+    const router = useRouter()
+    const pathname = usePathname()
+
+    const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
+
+    function handleNavigate(href?: string) {
+        if (!href) return
+        router.push(href)
+        setIsOpen(false)
+        setOpenSubmenu(null)
+    }
+
+    function toggleSubmenu(label: string) {
+        setOpenSubmenu(prev => (prev === label ? null : label))
+    }
 
     return (
         <>
+            {/* OVERLAY */}
             <div
-                className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-all duration-300 ease-in-out z-20 w-64 ${
-                    isOpen ? "translate-x-0" : "-translate-x-full"
-                }`}
-            >
-                <nav className="mt-16 p-4">
-                    <ul className="space-y-6">
-                        {menuItems.map((item, index) => (
-                            <li key={index}>
-                                <div
-                                    className="flex items-center text-gray-700 hover:text-primary transition-colors duration-200 cursor-pointer"
-                                    onClick={() => {
-                                        if (item.href) {
-                                            router.push(item.href);
-                                        }
-                                        handleMenuItemClick(item);
-                                    }}
-                                >
-                                    <item.icon className="h-6 w-6 min-w-[24px]"/>
-                                    <span className="ml-4">{item.label}</span>
-                                    {item.subItems && (
-                                        <ChevronRight
-                                            className={`ml-auto h-4 w-4 transition-transform duration-200 ease-in-out ${
-                                                openSubmenu === item.label || (isCadastrosExpanded && item.label === "Cadastros") || (isProcessamentoExpanded && item.label === "Processamento")
-                                                    ? "transform rotate-90"
-                                                    : ""
-                                            }`}
-                                        />
-                                    )}
-                                </div>
-                                {item.subItems &&
-                                    (openSubmenu === item.label || (isCadastrosExpanded && item.label === "Cadastros") || (isProcessamentoExpanded && item.label === "Processamento")) && (
-                                        <ul className="ml-8 mt-2 space-y-2">
-                                            {item.subItems.map((subItem, subIndex) => (
-                                                <li key={subIndex}>
-                                                    <Link
-                                                        href={subItem.href}
-                                                        className="flex items-center text-gray-600 hover:text-primary transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105"
-                                                    >
-                                                        {subItem.icon && <subItem.icon className="h-4 w-4 mr-2"/>}
-                                                        <span className="text-sm">{subItem.label}</span>
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                            </li>
-                        ))}
-                    </ul>
-                </nav>
-            </div>
-            <div
-                className={`fixed inset-0 bg-black transition-opacity duration-300 ease-in-out ${
-                    isOpen ? "opacity-50 z-10" : "opacity-0 pointer-events-none"
-                }`}
+                className={`
+                    fixed inset-0 z-[45]
+                    bg-black/40
+                    backdrop-blur-sm
+                    transition-opacity duration-300
+                    ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
+                `}
                 onClick={() => setIsOpen(false)}
-            ></div>
+            />
+
+            {/* DRAWER */}
+            <aside
+                className={`
+                    fixed top-0 left-0 h-full z-[50]
+                    w-[78%] max-w-[320px]
+                    transition-transform duration-400
+                    ease-[cubic-bezier(.22,.61,.36,1)]
+                    ${isOpen ? "translate-x-0" : "-translate-x-full"}
+                `}
+            >
+                <div
+                    className="
+                        h-full pt-20 px-4 pb-6
+                        bg-white/80
+                        backdrop-blur-xl
+                        border-r border-gray-200
+                        shadow-[0_20px_80px_rgba(0,0,0,0.25)]
+                    "
+                >
+                    <nav>
+                        <ul className="space-y-2">
+                            {menuItems.map((item, index) => {
+                                const isActive =
+                                    item.href &&
+                                    pathname.startsWith(item.href)
+
+                                const submenuOpen =
+                                    openSubmenu === item.label
+
+                                return (
+                                    <li key={index}>
+                                        {/* ITEM PRINCIPAL */}
+                                        <button
+                                            onClick={() =>
+                                                item.subItems
+                                                    ? toggleSubmenu(item.label)
+                                                    : handleNavigate(item.href)
+                                            }
+                                            className={`
+                                                w-full flex items-center gap-3
+                                                px-3 py-3
+                                                rounded-xl
+                                                transition-all duration-300 ease-out
+
+                                                ${
+                                                isActive
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-gray-700 hover:bg-gray-100"
+                                            }
+                                            `}
+                                        >
+                                            <item.icon className="h-5 w-5" />
+
+                                            <span className="text-sm font-medium">
+                                                {item.label}
+                                            </span>
+
+                                            {item.subItems && (
+                                                <ChevronDown
+                                                    className={`
+                                                        ml-auto h-4 w-4
+                                                        transition-transform duration-300
+                                                        ${
+                                                        submenuOpen
+                                                            ? "rotate-180 opacity-100"
+                                                            : "opacity-50"
+                                                    }
+                                                    `}
+                                                />
+                                            )}
+                                        </button>
+
+                                        {/* SUBMENU */}
+                                        {item.subItems && (
+                                            <div
+                                                className={`
+                                                    overflow-hidden
+                                                    transition-all duration-300 ease-out
+                                                    ${
+                                                    submenuOpen
+                                                        ? "max-h-[500px] opacity-100"
+                                                        : "max-h-0 opacity-0"
+                                                }
+                                                `}
+                                            >
+                                                <ul className="mt-2 ml-4 space-y-1">
+                                                    {item.subItems.map(
+                                                        (subItem, subIndex) => {
+                                                            const subActive =
+                                                                pathname ===
+                                                                subItem.href
+
+                                                            return (
+                                                                <li key={subIndex}>
+                                                                    <Link
+                                                                        href={
+                                                                            subItem.href
+                                                                        }
+                                                                        onClick={() =>
+                                                                            setIsOpen(false)
+                                                                        }
+                                                                        className={`
+                                                                            flex items-center gap-3
+                                                                            px-3 py-2
+                                                                            rounded-lg
+                                                                            text-sm
+                                                                            transition-all duration-300 ease-out
+
+                                                                            ${
+                                                                            subActive
+                                                                                ? "bg-primary/15 text-primary"
+                                                                                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                                                        }
+                                                                        `}
+                                                                    >
+                                                                        <subItem.icon className="h-4 w-4" />
+                                                                        <span>
+                                                                            {
+                                                                                subItem.label
+                                                                            }
+                                                                        </span>
+                                                                    </Link>
+                                                                </li>
+                                                            )
+                                                        }
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
         </>
-    );
+    )
 }

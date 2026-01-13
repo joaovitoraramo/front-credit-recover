@@ -3,10 +3,10 @@
 import {useParams, useRouter} from 'next/navigation';
 import React, {useEffect, useState} from 'react';
 import {useLoading} from '@/context/LoadingContext';
-import {useToast} from "@/hooks/use-toast";
 import {Client as Cliente, type ClienteDTO} from "@/types/client";
 import ClienteModal from "@/app/cadastros/clientes/ClienteModal";
 import {atualiza, listaPorId} from "@/services/Cliente";
+import {useToast} from "@/components/toast/ToastProvider";
 
 export default function BandeiraDetalhes() {
     const params = useParams();
@@ -14,7 +14,7 @@ export default function BandeiraDetalhes() {
     const id = params.id;
     const [cliente, setCliente] = useState<Cliente | undefined>(undefined);
     const {setIsLoading} = useLoading();
-    const {toast} = useToast();
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (id) {
@@ -61,11 +61,7 @@ export default function BandeiraDetalhes() {
             })),
         };
         await atualiza(put);
-        toast({
-            title: 'Clientes',
-            description: 'Atualização de cliente realizada com sucesso.',
-            className: 'p-4 relative flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary bg-white',
-        })
+        showToast("Atualização de cliente realizada com sucesso.", "success");
         router.push('/cadastros/clientes');
     }
 

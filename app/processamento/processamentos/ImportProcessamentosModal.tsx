@@ -1,22 +1,17 @@
 "use client"
 
-import React, {useState, useRef, useEffect, useCallback} from "react"
+import React, {useCallback, useEffect, useState} from "react"
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog"
-import {Button} from "@/components/ui/button"
-import {Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandInput} from "@/components/ui/command"
-import {Ban, Check, ChevronsUpDown, CircleArrowRight, Download, Upload, X} from "lucide-react"
-import {cn} from "@/lib/utils"
-import {searchClientes} from "@/lib/apiProcessamento"
+import {Ban, CircleArrowRight, X} from "lucide-react"
 import type {Client} from "@/types/client"
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover"
 import InputItensCombobox from "@/components/Inputs/InputItensCombo";
 import {lista} from "@/services/Cliente";
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import {useDropzone} from "react-dropzone";
 import {importar} from "@/services/Importacao";
-import {useToast} from "@/hooks/use-toast";
 import {TipoAdquirente, TipoImportacao} from "@/types/tipoImportacao";
 import SelectPadrao from "@/components/Inputs/SelectPadrao";
+import {useToast} from "@/components/toast/ToastProvider";
 
 interface ImportProcessamentosModalProps {
     open: boolean
@@ -33,7 +28,7 @@ export default function ImportProcessamentosModal({open, onOpenChange, onCancel}
     const [file, setFile] = useState<File | null>(null);
     const [selectedArquivoName, setSelectedArquivoName] = useState<string | null>(null);
     const [isPos, setIsPos] = useState<boolean>(false);
-    const {toast} = useToast();
+    const { showToast } = useToast();
 
     useEffect(() => {
         setSelectedArquivoName(null)
@@ -64,11 +59,7 @@ export default function ImportProcessamentosModal({open, onOpenChange, onCancel}
         if (selectedCliente && file) {
             const retorno = await importar(selectedCliente?.id, file, tipoImportacao, tipoAdquirente);
             if (retorno.status === 'OK') {
-                toast({
-                    title: 'Importação de vendas',
-                    description: retorno.mensagem,
-                    className: 'p-4 relative bg-[#808080] flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary',
-                })
+                showToast(retorno.mensagem, "success");
                 onOpenChange(false)
             }
         }

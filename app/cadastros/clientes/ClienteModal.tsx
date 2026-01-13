@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from "react"
 import {Client, STATUS_CLIENTE_LABEL, StatusCliente} from "@/types/client"
 import type {Contabilidade} from "@/types/contabilidade"
 import type {BandeirasCliente} from "@/types/bandeirasCliente"
-import {CreditCard, Globe, Info, Plus, Save, X} from "lucide-react"
+import {CreditCard, Globe, Info, Plus, Save, Wrench, X} from "lucide-react"
 import ClienteBandeirasTab from "./ClienteBandeirasTab"
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
@@ -47,7 +47,7 @@ export default function ClienteModal({
         senhaSitef: "",
         linkSitef: "",
         contabilidade: undefined,
-        status: "NORMAL",
+        status: "ATIVO",
     })
     const [contabilidades, setContabilidades] = useState<Contabilidade[]>([])
     const [filteredContabilidades, setFilteredContabilidades] = useState<Contabilidade[]>([])
@@ -340,17 +340,19 @@ export default function ClienteModal({
                         `}
                                                 >
                                                     {/** ícone opcional */}
-                                                    {status === "NORMAL" && <Info className="h-5 w-5" />}
-                                                    {status === "BLOQUEADO" && <X className="h-5 w-5" />}
+                                                    {status === "ATIVO" && <Info className="h-5 w-5" />}
                                                     {status === "INATIVO" && <Globe className="h-5 w-5" />}
+                                                    {status === "IMPLANTACAO" && <Wrench className="h-5 w-5" />}
+                                                    {status === "CANCELADO" && <X className="h-5 w-5" />}
                                                 </div>
 
                                                 <div className="flex-1">
                                                     <p className="text-sm font-semibold">{label}</p>
                                                     <p className="text-xs text-gray-500">
-                                                        {status === "NORMAL" && "Cliente ativo e operando normalmente"}
-                                                        {status === "BLOQUEADO" && "Cliente bloqueado para operações"}
+                                                        {status === "ATIVO" && "Cliente ativo e operando normalmente"}
                                                         {status === "INATIVO" && "Cliente inativo no sistema"}
+                                                        {status === "IMPLANTACAO" && "Cliente sendo implantado na plataforma"}
+                                                        {status === "CANCELADO" && "Cliente desativado na plataforma"}
                                                     </p>
                                                 </div>
 

@@ -6,7 +6,7 @@ import type {Client as Cliente, StatusCliente} from "@/types/client"
 import ClienteModal from "@/app/cadastros/clientes/ClienteModal";
 import DataTablePadrao from "@/components/Tabelas/DataTablePadrao";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
-import {CheckCircle, Lock, LucideIcon, PauseCircle} from "lucide-react";
+import {CheckCircle, LucideIcon, PauseCircle, Wrench, XCircle} from "lucide-react";
 import {Badge} from '@/components/ui/badge';
 
 interface ClientsTableProps {
@@ -28,21 +28,27 @@ const statusConfig: Record<
         className: string;
     }
 > = {
-    NORMAL: {
-        label: "Normal",
+    ATIVO: {
+        label: "Ativo",
         icon: CheckCircle,
         className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    },
-    BLOQUEADO: {
-        label: "Bloqueado",
-        icon: Lock,
-        className: "bg-red-50 text-red-700 border border-red-200",
     },
     INATIVO: {
         label: "Inativo",
         icon: PauseCircle,
         className: "bg-slate-100 text-slate-700 border border-slate-200",
     },
+    IMPLANTACAO: {
+        label: "Implantação",
+        icon: Wrench,
+        className: "bg-blue-50 text-blue-700 border border-blue-200",
+    },
+    CANCELADO: {
+        label: "Cancelado",
+        icon: XCircle,
+        className: "bg-red-50 text-red-700 border border-red-200",
+    },
+
 };
 
 

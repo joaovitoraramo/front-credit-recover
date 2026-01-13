@@ -1,11 +1,14 @@
 'use client';
 
 // store/permissoesStore.ts
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { IPermissao } from '@/types/perfil';
+import {create} from 'zustand';
+import {persist} from 'zustand/middleware';
+import {IPermissao} from '@/types/perfil';
 
 export interface IUsuario {
+    nome: string;
+    email: string;
+    icone: string;
     perfil: IPerfilUsuario;
     permissoes: IPermissao[];
     token: string;
@@ -27,6 +30,9 @@ export const usePermissoesStore = create<PermissoesState>()(
     persist(
         (set) => ({
             usuario: {
+                icone: '',
+                nome: '',
+                email: '',
                 permissoes: [],
                 perfil: {
                     nome: '',

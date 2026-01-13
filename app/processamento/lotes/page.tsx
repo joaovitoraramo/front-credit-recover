@@ -1,25 +1,28 @@
 "use client"
 
-import {useState, useEffect, useCallback} from "react"
+import {useCallback, useEffect, useState} from "react"
 import {useRouter} from "next/navigation"
 import LotesTable from "@/app/processamento/lotes/LotesTable"
 import FilterLotesModal from "@/app/processamento/lotes/FilterLotesModal"
 import {Processamento, ProcessamentoFilter} from "@/types/processamento"
 import type {PaginationState} from "@tanstack/react-table"
-import {Search, RefreshCcw, Loader2, FileDown, Download} from "lucide-react"
+import {Download, FileDown, Loader2, RefreshCcw, Search} from "lucide-react"
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import {useLoading} from "@/context/LoadingContext";
-import {useToast} from "@/hooks/use-toast";
 import {LoteReadDTO} from "@/types/lote";
 import {lista} from "@/services/Lote";
 import {
-    aplicarEncargosLote, atualiza,
-    baixar, deleta,
+    aplicarEncargosLote,
+    atualiza,
+    baixar,
+    deleta,
     lista as listaProcessamentos,
     reprocessar,
     reprocessarPorLote,
-    reverterBaixa, transferirLote, transferirProcessamento
+    reverterBaixa,
+    transferirLote,
+    transferirProcessamento
 } from "@/services/Processamento";
 import ProcessamentosTable from "@/app/processamento/processamentos/ProcessamentosTable";
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
@@ -30,6 +33,7 @@ import TransferProcessamentoModal from "@/app/processamento/lotes/TransferProces
 import {ExportColumn, ExportStatus} from "@/types/export";
 import {downloadExcel} from "@/components/Util/utils";
 import ModalExportar from "@/components/ModalExportar";
+import {useToast} from "@/components/toast/ToastProvider";
 
 export default function LotesPage() {
     const router = useRouter()
@@ -52,7 +56,6 @@ export default function LotesPage() {
     const [initialFilterDone, setInitialFilterDone] = useState(false)
     const [isFromDrawer, setIsFromDrawer] = useState(true)
     const {setIsLoading} = useLoading();
-    const {toast} = useToast();
     const [atualizarLista, setAtualizarLista] = useState<boolean>(false);
     const [processamentos, setProcessamentos] = useState<Processamento[]>([]);
     const [isProcessamentosModalOpen, setIsProcessamentosModalOpen] = useState(false);
@@ -70,6 +73,7 @@ export default function LotesPage() {
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportFilter, setExportFilter] = useState<ProcessamentoFilter | null>(null);
     const [exportColumns, setExportColumns] = useState<ExportColumn<LoteReadDTO>[]>([]);
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (filter.dataInicial || filter.dataFinal || filter.bandeiraIds.length > 0) {
@@ -204,11 +208,7 @@ export default function LotesPage() {
         const idsProcessamentos = processamentos.map(processamento => processamento.id);
         const retorno = await reprocessar(idsProcessamentos);
         if (retorno.status === 'OK') {
-            toast({
-                title: 'Processamentos',
-                description: retorno.mensagem,
-                className: 'p-4 relative bg-[#808080] flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary',
-            })
+            showToast(retorno.mensagem, "success");
             setAtualizarLista(!atualizarLista);
         }
     }
@@ -224,11 +224,7 @@ export default function LotesPage() {
             });
         });
         setAtualizarLista(!atualizarLista);
-        toast({
-            title: 'Processamentos',
-            description: 'Atualização de registro de venda realizada com sucesso.',
-            className: 'p-4 relative bg-[#808080] flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary',
-        })
+        showToast("Atualização de registro de venda realizada com sucesso.", "success");
     }
 
     const handleDeleteProcessamentoAction = async (id: number) => {
@@ -242,11 +238,7 @@ export default function LotesPage() {
         if (idDeleta) {
             await deleta(idDeleta);
             setIdDeleta(null);
-            toast({
-                title: 'Processamentos',
-                description: 'Processamento deletado com sucesso.',
-                className: 'p-4 relative bg-[#808080] flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary',
-            })
+            showToast("Processamento deletado.", "warning");
             setAtualizarLista(!atualizarLista);
         }
     }

@@ -2,18 +2,18 @@
 
 "use client";
 
-import {useState, useEffect} from "react";
+import {useEffect, useState} from "react";
 import BandeirasTable from "@/app/cadastros/bandeiras/BandeirasTable";
 import {Plus} from "lucide-react";
 import type {Bandeira} from "@/types/bandeira";
 import type {PaginationState} from "@tanstack/react-table";
 import BandeiraModal from "@/app/cadastros/bandeiras/BandeiraModal";
-import {lista, cadastra, atualiza, deleta} from "@/services/Bandeira";
+import {atualiza, cadastra, deleta, lista} from "@/services/Bandeira";
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import {useLoading} from "@/context/LoadingContext";
-import {useToast} from "@/hooks/use-toast";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
+import {useToast} from "@/components/toast/ToastProvider";
 
 export default function BandeirasPage() {
     useCheckPermission(1016, true);
@@ -25,7 +25,7 @@ export default function BandeirasPage() {
     });
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const {setIsLoading} = useLoading();
-    const {toast} = useToast();
+    const { showToast } = useToast();
 
     const fetchBandeiras = async (filtro: any | null) => {
         setIsLoading(true);
@@ -43,11 +43,7 @@ export default function BandeirasPage() {
     const handleEdit = async (editedBandeira: Bandeira) => {
         const updated = await atualiza(editedBandeira);
         setBandeiras(bandeiras.map((bandeira) => (bandeira.id === updated.id ? updated : bandeira)));
-        toast({
-            title: 'Bandeiras',
-            description: 'Atualização de bandeira realizada com sucesso.',
-            className: 'p-4 relative flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary bg-white',
-        })
+        showToast("Atualização de bandeira realizada com sucesso.", "success");
     };
 
     const handleDelete = async (deletedBandeira: Bandeira) => {
@@ -65,11 +61,7 @@ export default function BandeirasPage() {
         const added = await cadastra(post);
         setBandeiras([...bandeiras, added]);
         setIsAddModalOpen(false);
-        toast({
-            title: 'Bandeiras',
-            description: 'Cadastro de bandeira realizado com sucesso.',
-            className: 'p-4 relative flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#36913A] text-[#58F560] bg-white',
-        })
+        showToast("Cadastro de bandeira realizado com sucesso.", "success");
     };
 
     const handleFiltroAction = async (filtro: any) => {

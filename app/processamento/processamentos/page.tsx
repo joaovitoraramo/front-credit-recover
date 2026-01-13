@@ -1,24 +1,24 @@
 "use client"
 
-import {useState, useEffect, useCallback} from "react"
+import {useCallback, useEffect, useState} from "react"
 import {useRouter} from "next/navigation"
 import ProcessamentosTable from "@/app/processamento/processamentos/ProcessamentosTable"
 import FilterProcessamentosModal from "@/app/processamento/processamentos/FilterProcessamentosModal"
 import ImportProcessamentosModal from "@/app/processamento/processamentos/ImportProcessamentosModal"
 import {Processamento, ProcessamentoDTO, ProcessamentoFilter} from "@/types/processamento"
 import type {PaginationState} from "@tanstack/react-table"
-import {Search, Upload, Download, Plus, RefreshCcw, FileDown, Loader2} from "lucide-react"
+import {Download, FileDown, Loader2, Plus, RefreshCcw, Search, Upload} from "lucide-react"
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
 import TituloPadrao from "@/components/Titulos/TituloPadrao";
 import {useLoading} from "@/context/LoadingContext";
 import {atualiza, cadastra, deleta, lista, reprocessar} from "@/services/Processamento";
-import {useToast} from "@/hooks/use-toast";
 import {IncludeProcessamentoModal} from "@/app/processamento/processamentos/IncludeProcessamentoModal";
 import {useModalAvisoConfirmacao} from "@/context/ModalAvisoConfirmacaoContext";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
 import {ExportColumn, ExportStatus} from "@/types/export";
 import {downloadExcel} from "@/components/Util/utils";
 import ModalExportar from "@/components/ModalExportar";
+import {useToast} from "@/components/toast/ToastProvider";
 
 export default function ProcessamentosPage() {
     const router = useRouter()
@@ -36,7 +36,6 @@ export default function ProcessamentosPage() {
     const [isFromDrawer, setIsFromDrawer] = useState(true)
     const [showImport, setShowImport] = useState(false)
     const {setIsLoading} = useLoading();
-    const {toast} = useToast();
     const [atualizarLista, setAtualizarLista] = useState<boolean>(false);
     const [showInclude, setShowInclude] = useState(false);
     const {setIsOpen, setTitulo, setDescricao, confirmacao, setConfirmacao} = useModalAvisoConfirmacao();
@@ -46,6 +45,7 @@ export default function ProcessamentosPage() {
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportFilter, setExportFilter] = useState<ProcessamentoFilter | null>(null);
     const [exportColumns, setExportColumns] = useState<ExportColumn<Processamento>[]>([]);
+    const { showToast } = useToast();
 
 
 
@@ -139,22 +139,14 @@ export default function ProcessamentosPage() {
             });
         });
         setAtualizarLista(!atualizarLista);
-        toast({
-            title: 'Processamentos',
-            description: 'Atualização de registro de venda realizada com sucesso.',
-            className: 'p-4 relative bg-[#808080] flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary',
-        })
+        showToast("Atualização de registro de venda realizada com sucesso.", "success");
     }
 
     const handleReprocessarVendas = async (processamentos: Processamento[]) => {
         const idsProcessamentos = processamentos.map(processamento => processamento.id);
         const retorno = await reprocessar(idsProcessamentos);
         if (retorno.status === 'OK') {
-            toast({
-                title: 'Processamentos',
-                description: retorno.mensagem,
-                className: 'p-4 relative bg-[#808080] flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary',
-            })
+            showToast(retorno.mensagem, "success");
             setAtualizarLista(!atualizarLista);
         }
     }
@@ -170,11 +162,7 @@ export default function ProcessamentosPage() {
         if (idDeleta) {
             await deleta(idDeleta);
             setIdDeleta(null);
-            toast({
-                title: 'Processamentos',
-                description: 'Processamento deletado com sucesso.',
-                className: 'p-4 relative bg-[#808080] flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary',
-            })
+            showToast("Processamento deletado com sucesso.", "warning");
             setAtualizarLista(!atualizarLista);
         }
     }

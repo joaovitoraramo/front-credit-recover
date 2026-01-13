@@ -2,7 +2,7 @@
 
 import type {Contabilidade} from './contabilidade';
 import type {BandeiraClienteDTO, BandeirasCliente} from './bandeirasCliente';
-import {CheckCircle, Lock, Pause} from "lucide-react";
+import {CheckCircle, Pause, Wrench, XCircle} from "lucide-react";
 
 export interface ClientAdditionalDetail {
     id?: string; // Opcional, para identificar no backend ou localmente. Use um ID negativo temporário para novos itens.
@@ -55,18 +55,20 @@ export interface Client {
     status: StatusCliente;
 }
 
-export type StatusCliente = "NORMAL" | "BLOQUEADO" | "INATIVO";
+export type StatusCliente = "ATIVO" | "INATIVO" | "IMPLANTACAO" | "CANCELADO";
 
 export const STATUS_CLIENTE_LABEL: Record<StatusCliente, string> = {
-    NORMAL: "Normal",
-    BLOQUEADO: "Bloqueado",
+    ATIVO: "Ativo",
     INATIVO: "Inativo",
+    IMPLANTACAO: "Implantação",
+    CANCELADO: "Cancelado",
 };
 
 export const STATUS_ICONS: Record<StatusCliente, React.ElementType> = {
-    NORMAL: CheckCircle,
-    BLOQUEADO: Lock,
+    ATIVO: CheckCircle,
     INATIVO: Pause,
+    IMPLANTACAO: Wrench,
+    CANCELADO: XCircle,
 };
 
 

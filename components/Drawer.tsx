@@ -1,18 +1,22 @@
 "use client"
 
 import {
-    Home,
-    DollarSign,
     BarChart2,
-    Settings,
-    Users,
     BookOpen,
-    UserPlus,
-    Landmark,
-    CreditCard,
     BriefcaseBusiness,
+    ChartNoAxesCombined,
+    CreditCard,
+    DollarSign,
+    Home,
+    ImageIcon as AdquirenteIcon,
+    Landmark,
+    LayoutDashboard,
+    LucideIcon,
+    Settings,
+    UserPlus,
+    Users,
+    Users2,
     Wallet,
-    ImageIcon as AdquirenteIcon, LucideIcon, Users2, ChartNoAxesCombined,
 } from "lucide-react"
 import DrawerMobile from "@/components/DrawerMobile";
 import DrawerDesktop, {DrawerDesktopProps} from "@/components/DrawerDesktop";
@@ -56,6 +60,12 @@ export default function Drawer({isOpen, setIsOpen}: DrawerDesktopProps) {
             tag: 0,
             canMobile: true,
             subItems: [
+                {
+                    icon: LayoutDashboard,
+                    label: 'Tela principal',
+                    href: '/principal',
+                    tag: 0
+                },
                 {
                     icon: ChartNoAxesCombined,
                     label: 'Dashboard',
@@ -103,7 +113,7 @@ export default function Drawer({isOpen, setIsOpen}: DrawerDesktopProps) {
         {
             icon: Settings,
             label: "Configurações",
-            href: "/configuracoes",
+            href: "/perfil",
             canMobile: false,
             tag: 0
         },

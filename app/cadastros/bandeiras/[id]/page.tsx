@@ -6,7 +6,7 @@ import {atualiza, listaPorId} from '@/services/Bandeira';
 import {useLoading} from '@/context/LoadingContext';
 import BandeiraModal from "@/app/cadastros/bandeiras/BandeiraModal";
 import {Bandeira} from "@/types/bandeira";
-import {useToast} from "@/hooks/use-toast";
+import {useToast} from "@/components/toast/ToastProvider";
 
 export default function BandeiraDetalhes() {
     const params = useParams();
@@ -14,7 +14,7 @@ export default function BandeiraDetalhes() {
     const id = params.id;
     const [bandeira, setBandeira] = useState<Bandeira | undefined>(undefined);
     const {setIsLoading} = useLoading();
-    const {toast} = useToast();
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (id) {
@@ -30,11 +30,7 @@ export default function BandeiraDetalhes() {
 
     const handleEdit = async (editedBandeira: Bandeira) => {
         const updated = await atualiza(editedBandeira);
-        toast({
-            title: 'Bandeiras',
-            description: 'Atualização de bandeira realizada com sucesso.',
-            className: 'p-4 relative flex items-center shadow-md rounded-lg transition-all duration-300 hover:-translate-z-1 hover:scale-105 z-10 border-[#F5E158] text-primary bg-white',
-        });
+        showToast("Atualização de bandeira realizada com sucesso.", "success");
         router.push('/cadastros/bandeiras');
     };
 

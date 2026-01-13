@@ -1,10 +1,10 @@
 'use client';
 
-import { IMensagemPadraoProps } from '@/components/Util/MensagemPadrao';
-import { Dispatch, SetStateAction } from 'react';
-import { UsuarioDTO } from '@/types/usuario';
-import { getPadrao, postPadrao, putPadrao } from '@/services';
-import { IUsuario } from '@/store/permissoesStore';
+import {IMensagemPadraoProps} from '@/components/Util/MensagemPadrao';
+import {Dispatch, SetStateAction} from 'react';
+import {UsuarioDTO} from '@/types/usuario';
+import {getPadrao, postPadrao, putPadrao} from '@/services';
+import {IUsuario} from '@/store/permissoesStore';
 
 export async function autenticar(
     email: string,
@@ -46,6 +46,9 @@ export async function autenticar(
         const resposta = await response.json();
 
         const usuario: IUsuario = {
+            icone: resposta.icone,
+            nome: resposta.nome,
+            email: resposta.email,
             perfil: {
                 nome: resposta.Nome,
                 email,
