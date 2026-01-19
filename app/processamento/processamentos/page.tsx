@@ -190,7 +190,7 @@ export default function ProcessamentosPage() {
                 const response = await lista({
                     pagination: {
                         pageIndex: page,
-                        pageSize: 100000,
+                        pageSize: 100,
                     },
                     filter: filtro,
                 });
