@@ -31,7 +31,20 @@ interface PermissoesState {
 export const usePermissoesStore = create<PermissoesState>()(
     persist(
         (set) => ({
-            usuario: null,
+            usuario: {
+                id: 0,
+                nome: '',
+                email: '',
+                icone: '',
+                perfil: {
+                    id: 0,
+                    nome: '',
+                    email: '',
+                },
+                permissoes: [],
+                token: '',
+                isSuporte: false,
+            },
             setUsuario: (usuario) => set({ usuario }),
             hasHydrated: false,
             setHasHydrated: (value) => set({ hasHydrated: value })
