@@ -12,6 +12,7 @@ import {atualiza, cadastra, deleta, listaPaginavel} from '@/services/Cliente';
 import {useLoading} from "@/context/LoadingContext";
 import {useCheckPermission} from "@/hooks/useCheckPermission";
 import {useToast} from "@/components/toast/ToastProvider";
+import BotaoPrimario from "@/components/Botoes/BotaoPrimario";
 
 export default function ClientsPage() {
     useCheckPermission(1032, true);
@@ -388,19 +389,11 @@ export default function ClientsPage() {
                         </div>
 
                         <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
-                            <BotaoPadrao
-                                name="Cancelar"
-                                variant="ghost"
-                                onClick={closeStatusModal}
-                            />
-
-                            <BotaoPadrao
-                                name="Aplicar filtro"
-                                variant="outline"
-                                onClick={() => {
-                                    aplicarFiltroStatus();
-                                    closeStatusModal();
-                                }}
+                            <BotaoPrimario label={"Cancelar"} onClick={closeStatusModal} />
+                            <BotaoPrimario label={"Aplicar filtro"} onClick={() => {
+                                aplicarFiltroStatus();
+                                closeStatusModal();
+                            }}
                             />
                         </div>
                     </div>
