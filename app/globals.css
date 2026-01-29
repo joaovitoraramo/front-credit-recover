@@ -184,3 +184,27 @@ body {
         transform: translateY(0) scale(1);
     }
 }
+
+/* Scroll premium */
+.scroll-premium {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99,102,241,.4) transparent;
+}
+
+.scroll-premium::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scroll-premium::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scroll-premium::-webkit-scrollbar-thumb {
+    background-color: rgba(99,102,241,.35);
+    border-radius: 8px;
+}
+
+.scroll-premium::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(99,102,241,.6);
+}
+
