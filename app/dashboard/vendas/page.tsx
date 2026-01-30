@@ -625,8 +625,27 @@ export default function DashboardVendasPage() {
                     ) : (
                     <div className="max-w-[1600px] mx-auto px-6 space-y-10">
                         <div className="flex justify-between items-end">
-                            <div>
-                                <h1 className="text-3xl font-bold">Dashboard de Vendas</h1>
+                            <div className="space-y-1">
+                                <h1 className="text-3xl font-bold">
+                                    Dashboard de Vendas
+                                </h1>
+
+                                {selectedCliente && (
+                                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                                        {/* Nome do cliente */}
+                                        <span className="font-medium text-gray-700">
+          {selectedCliente.nomeFantasia}
+        </span>
+
+                                        {/* Separador */}
+                                        <span className="text-gray-300">•</span>
+
+                                        {/* CNPJ */}
+                                        <span className="font-mono tracking-wide">
+          CNPJ {selectedCliente.cnpj}
+        </span>
+                                    </div>
+                                )}
                             </div>
 
                             <BotaoPadrao
