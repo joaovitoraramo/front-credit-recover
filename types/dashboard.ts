@@ -7,9 +7,13 @@ export interface Periodo {
 
 export interface ResumoVendas {
     valorBruto: number;
+    valorBrutoAnterior: number;
     valorLiquido: number;
+    valorLiquidoAnterior: number;
     despesas: number;
+    despesasAnterior: number;
     taxaMedia: number;
+    taxaMediaAnterior: number;
 }
 
 export interface ResumoComparativo {
@@ -41,6 +45,7 @@ export interface TicketMedioBandeira {
     valorTotal: number;
     ticketMedio: number;
     quantidadeTransacoes: number;
+    taxa: number;
 }
 
 export interface DashboardVendasDTO {

@@ -6,8 +6,7 @@ import {lista} from "@/services/Cliente";
 import {listaPorClienteTipo} from "@/services/Bandeira";
 import type {Client} from "@/types/client";
 import type {Bandeira} from "@/types/bandeira";
-import {Input} from '@/components/ui/input';
-import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import {Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import InputItensCombobox from "@/components/Inputs/InputItensCombo";
 import InputItensComboboxArray from "@/components/Inputs/InputItensComboArray";
 import BotaoPadrao from "@/components/Botoes/BotaoPadrao";
@@ -27,15 +26,19 @@ import {
     fetchVendasPorModalidade
 } from "@/services/Dashboard/dashboard";
 import {SlidersHorizontal} from "lucide-react";
+import {stringSvgToDataUrl} from "@/components/Util/utils";
+import {DateInputSmart} from "@/components/Inputs/DateInputSmart";
+
+interface TicketMedioTooltipProps {
+    active?: boolean;
+    payload?: any[];
+    label?: string;
+    ordenarPorRentabilidade: boolean;
+}
 
 /* =========================
    AUX
 ========================= */
-
-function calcularComparativo(atual: number): ResumoComparativo {
-    const anterior = atual * (0.85 + Math.random() * 0.2);
-    return {atual, anterior};
-}
 
 function percentualDiff(atual: number, anterior: number) {
     return ((atual - anterior) / anterior) * 100;
@@ -54,6 +57,9 @@ export default function DashboardVendasPage() {
     const [isTooltipHovered, setIsTooltipHovered] = useState(false);
     const hideTimeout = useRef<NodeJS.Timeout | null>(null);
     const activeKeyRef = useRef<string | null>(null);
+    const dataInicioRef = useRef<HTMLInputElement>(null);
+    const dataFimRef = useRef<HTMLInputElement>(null);
+
 
     /* ---------- FILTRO GLOBAL (BASE) ---------- */
     const [periodoGlobal, setPeriodoGlobal] = useState<Periodo>({
@@ -94,6 +100,8 @@ export default function DashboardVendasPage() {
 
     const [ticketMedio, setTicketMedio] = useState<TicketMedioBandeira[]>([]);
     const [loadingTicketMedio, setLoadingTicketMedio] = useState(false);
+    const [ordenarPorRentabilidade, setOrdenarPorRentabilidade] = useState(false);
+
 
     /* ---------- FETCH ---------- */
 
@@ -165,8 +173,8 @@ export default function DashboardVendasPage() {
 
     const aplicarFiltroGlobal = () => {
         const params = {
-            dataInicial: periodoGlobal.inicio,
-            dataFinal: periodoGlobal.fim,
+            dataInicial: toISODate(periodoGlobal.inicio),
+            dataFinal: toISODate(periodoGlobal.fim),
             clienteId: selectedCliente?.id,
             bandeiraIds: selectedBandeiras.map(b => b.id),
         };
@@ -181,7 +189,9 @@ export default function DashboardVendasPage() {
         if (!periodoRanking.inicio || !periodoRanking.fim) return;
 
         carregarRanking({
-            periodo: periodoRanking,
+            dataInicial: periodoRanking.inicio,
+            dataFinal: periodoRanking.fim,
+            bandeiraIds: selectedBandeiras.map(b => b.id),
             clienteId: selectedCliente?.id,
         });
     }, [periodoRanking]);
@@ -190,12 +200,12 @@ export default function DashboardVendasPage() {
         if (!periodoTicketMedio.inicio || !periodoTicketMedio.fim) return;
 
         carregarTicketMedio({
-            periodo: periodoTicketMedio,
+            dataInicial: periodoTicketMedio.inicio,
+            dataFinal: periodoTicketMedio.fim,
+            bandeiraIds: selectedBandeiras.map(b => b.id),
             clienteId: selectedCliente?.id,
         });
     }, [periodoTicketMedio]);
-
-    /* ---------- DERIVAÇÕES ---------- */
 
     const rankingFiltrado = useMemo(() => {
         if (!selectedBandeiras.length) return ranking;
@@ -204,11 +214,79 @@ export default function DashboardVendasPage() {
         );
     }, [selectedBandeiras, ranking]);
 
-    const ticketComparativo = calcularComparativo(
-        ticketMedio.reduce((acc, i) => acc + i.ticketMedio, 0)
-    );
+    function calcularRentabilidade(item: TicketMedioBandeira) {
+        const receita = item.ticketMedio * item.quantidadeTransacoes;
+        const custoTaxa = receita * (item.taxa / 100);
 
-    /* ========================= */
+        return receita - custoTaxa;
+    }
+
+    function KPIComparativo({
+                                label,
+                                atual,
+                                anterior,
+                                isPercent,
+                                invertColors = false,
+                            }: {
+        label: string;
+        atual: number;
+        anterior?: number | null;
+        isPercent?: boolean;
+        invertColors?: boolean;
+    }) {
+        const temComparativo =
+            anterior !== null &&
+            anterior !== undefined &&
+            anterior !== 0;
+
+        if (!temComparativo) {
+            return (
+                <motion.div whileHover={{ y: -4 }} className="bg-white rounded-2xl p-6 shadow">
+                    <p className="text-sm text-gray-500">{label}</p>
+
+                    <p className="text-3xl font-bold mt-1">
+                        {isPercent
+                            ? `${atual.toFixed(2)}%`
+                            : `R$ ${atual.toLocaleString("pt-BR")}`}
+                    </p>
+
+                    <p className="text-sm mt-2 text-gray-400 italic">
+                        Não existem dados para serem comparados
+                    </p>
+                </motion.div>
+            );
+        }
+
+        const diff = percentualDiff(atual, anterior);
+
+        // 🔼 ou 🔽 (direção real)
+        const isUp = atual > anterior;
+
+        // ✅ bom ou ruim (impacto no negócio)
+        const isGood = invertColors ? !isUp : isUp;
+
+        return (
+            <motion.div whileHover={{ y: -4 }} className="bg-white rounded-2xl p-6 shadow">
+                <p className="text-sm text-gray-500">{label}</p>
+
+                <p className="text-3xl font-bold mt-1">
+                    {isPercent
+                        ? `${atual.toFixed(2)}%`
+                        : `R$ ${atual.toLocaleString("pt-BR")}`}
+                </p>
+
+                <p
+                    className={`text-sm mt-2 ${
+                        isGood ? "text-green-600" : "text-red-600"
+                    }`}
+                >
+                    {isUp ? "▲" : "▼"} {Math.abs(diff).toFixed(2)}% vs período anterior
+                </p>
+            </motion.div>
+        );
+    }
+
+
 
     function EmptyStateFiltro({ onOpenFiltro }: { onOpenFiltro: () => void }) {
         return (
@@ -338,7 +416,98 @@ export default function DashboardVendasPage() {
         );
     }
 
+    const ticketMedioOrdenado = useMemo(() => {
+        return [...ticketMedio].sort(
+            (a, b) => Number(b.ticketMedio) - Number(a.ticketMedio)
+        );
+    }, [ticketMedio]);
 
+
+    const ticketMedioExibido = useMemo(() => {
+        if (!ordenarPorRentabilidade) return ticketMedioOrdenado;
+
+        return [...ticketMedioOrdenado].sort(
+            (a, b) => calcularRentabilidade(b) - calcularRentabilidade(a)
+        );
+    }, [ordenarPorRentabilidade, ticketMedioOrdenado]);
+
+    function TicketMedioTooltip({
+                                    active,
+                                    payload,
+                                    label,
+                                    ordenarPorRentabilidade,
+                                }: TicketMedioTooltipProps) {
+        if (!active || !payload || !payload.length) return null;
+
+        const {
+            ticketMedio,
+            valorTotal,
+            taxa,
+            quantidadeTransacoes,
+        } = payload[0].payload as TicketMedioBandeira;
+
+        return (
+            <div className="bg-white rounded-xl shadow-lg px-4 py-3 border border-gray-200 min-w-[240px]">
+                {/* Bandeira */}
+                <p className="text-sm font-semibold text-gray-800">
+                    {label}
+                </p>
+
+                {/* CONTEXTO */}
+                <p className="text-xs text-gray-500 mt-1">
+                    {ordenarPorRentabilidade
+                        ? "Ranking baseado em rentabilidade"
+                        : "Dados do período selecionado"}
+                </p>
+
+                <div className="mt-3 space-y-1">
+                    {/* Ticket Médio */}
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Ticket médio</span>
+                        <span className="font-semibold text-red-600">
+                        R$ {ticketMedio.toLocaleString("pt-BR")}
+                    </span>
+                    </div>
+
+                    {/* Valor Total */}
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Valor total</span>
+                        <span className="font-medium text-gray-800">
+                        R$ {valorTotal.toLocaleString("pt-BR")}
+                    </span>
+                    </div>
+
+                    {/* Taxa */}
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Taxa média</span>
+                        <span className="font-medium text-gray-800">
+                        {taxa.toFixed(2)}%
+                    </span>
+                    </div>
+
+                    {/* Quantidade */}
+                    <div className="flex justify-between text-xs text-gray-400 pt-1 border-t">
+                        <span>Transações</span>
+                        <span>{quantidadeTransacoes}</span>
+                    </div>
+                </div>
+
+                {/* EXPLICAÇÃO EXTRA (SÓ QUANDO ORDENADO) */}
+                {ordenarPorRentabilidade && (
+                    <p className="text-xs text-gray-500 mt-3 italic leading-snug">
+                        A rentabilidade considera o equilíbrio entre
+                        volume de transações, ticket médio e taxa aplicada.
+                    </p>
+                )}
+            </div>
+        );
+    }
+
+    function toISODate(brDate: string) {
+        const [day, month, year] = brDate.split("/");
+        if (!day || !month || !year) return null;
+        return `${year}-${month}-${day}`;
+    }
 
     return (
         <>
@@ -376,19 +545,25 @@ export default function DashboardVendasPage() {
                     </h2>
 
                     <div className="grid gap-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input
-                                type="date"
+                        <div className="grid grid-cols-2 gap-4">
+                            <DateInputSmart
+                                ref={dataInicioRef}
+                                label="Data inicial"
                                 value={periodoGlobal.inicio}
-                                onChange={(e) =>
-                                    setPeriodoGlobal({...periodoGlobal, inicio: e.target.value})
+                                onChange={(v) =>
+                                    setPeriodoGlobal({ ...periodoGlobal, inicio: v })
                                 }
+                                onComplete={() => {
+                                    dataFimRef.current?.focus();
+                                }}
                             />
-                            <Input
-                                type="date"
+
+                            <DateInputSmart
+                                ref={dataFimRef}
+                                label="Data final"
                                 value={periodoGlobal.fim}
-                                onChange={(e) =>
-                                    setPeriodoGlobal({...periodoGlobal, fim: e.target.value})
+                                onChange={(v) =>
+                                    setPeriodoGlobal({ ...periodoGlobal, fim: v })
                                 }
                             />
                         </div>
@@ -465,13 +640,15 @@ export default function DashboardVendasPage() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {resumo && (
                                 <>
-                                    <KPIComparativo label="Vendas Brutas" value={resumo.valorBruto}/>
-                                    <KPIComparativo label="Valor Líquido" value={resumo.valorLiquido}/>
-                                    <KPIComparativo label="Despesas" value={resumo.despesas}/>
+                                    <KPIComparativo label="Vendas Brutas" atual={resumo.valorBruto} anterior={resumo.valorBrutoAnterior}/>
+                                    <KPIComparativo label="Valor Líquido" atual={resumo.valorLiquido} anterior={resumo.valorLiquidoAnterior}/>
+                                    <KPIComparativo label="Despesas" atual={resumo.despesas} anterior={resumo.despesasAnterior} invertColors/>
                                     <KPIComparativo
                                         label="Taxa Média"
-                                        value={resumo.taxaMedia}
+                                        atual={resumo.taxaMedia}
+                                        anterior={resumo.taxaMediaAnterior}
                                         isPercent
+                                        invertColors
                                     />
                                 </>
                             )}
@@ -479,71 +656,78 @@ export default function DashboardVendasPage() {
 
                         {/* GRID */}
                         <div className="grid grid-cols-12 gap-8">
-                            <Painel className="col-span-12 lg:col-span-8 relative">
+                            <Painel className="col-span-12 lg:col-span-8 relative flex flex-col">
                                 <PainelHeader title="Vendas por Modalidade" />
 
-                                <ResponsiveContainer height={320}>
-                                    <BarChart
-                                        data={modalidades}
-                                        onMouseMove={(e: any) => {
-                                            if (!e?.activePayload?.length) return;
+                                {/* 🧠 CONTAINER DO GRÁFICO */}
+                                <div className="flex-1 relative">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                                            data={modalidades}
+                                            onMouseMove={(e: any) => {
+                                                if (!e?.activePayload?.length) return;
 
-                                            if (hideTimeout.current) {
-                                                clearTimeout(hideTimeout.current);
-                                                hideTimeout.current = null;
-                                            }
-
-                                            setTooltipData(e.activePayload[0].payload);
-                                            setTooltipPosition({
-                                                x: e.chartX,
-                                                y: e.chartY
-                                            });
-                                        }}
-                                        onMouseLeave={() => {
-                                            hideTimeout.current = setTimeout(() => {
-                                                if (!isTooltipHovered) {
-                                                    setTooltipData(null);
+                                                if (hideTimeout.current) {
+                                                    clearTimeout(hideTimeout.current);
+                                                    hideTimeout.current = null;
                                                 }
-                                            }, 120);
-                                        }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="modalidade" />
-                                        <YAxis />
 
-                                        {/* Tooltip invisível só para ativar activePayload */}
-                                        <Tooltip content={() => null} cursor={{ fill: "transparent" }} />
+                                                setTooltipData(e.activePayload[0].payload);
+                                                setTooltipPosition({
+                                                    x: e.chartX,
+                                                    y: e.chartY,
+                                                });
+                                            }}
+                                            onMouseLeave={() => {
+                                                hideTimeout.current = setTimeout(() => {
+                                                    if (!isTooltipHovered) {
+                                                        setTooltipData(null);
+                                                    }
+                                                }, 120);
+                                            }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" />
 
-                                        <Bar
-                                            dataKey="total"
-                                            fill="#6366f1"
-                                            radius={[10, 10, 0, 0]}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                            <XAxis dataKey="modalidade" />
 
-                                {/* 🔥 TOOLTIP EXTERNO */}
-                                {tooltipData && (
-                                    <div
-                                        className="absolute z-50 pointer-events-auto"
-                                        style={{
-                                            left: tooltipPosition.x + 16,
-                                            top: tooltipPosition.y - 40
-                                        }}
-                                        onMouseEnter={() => setIsTooltipHovered(true)}
-                                        onMouseLeave={() => {
-                                            setIsTooltipHovered(false);
-                                            setTooltipData(null);
-                                        }}
-                                    >
-                                        <TooltipModalidade
-                                            active
-                                            payload={[{ payload: tooltipData }]}
-                                            label={tooltipData.modalidade}
-                                        />
-                                    </div>
-                                )}
+                                            <YAxis />
+
+                                            {/* Tooltip invisível só para ativar activePayload */}
+                                            <Tooltip content={() => null} cursor={{ fill: "transparent" }} />
+
+                                            <Bar
+                                                dataKey="total"
+                                                fill="#6366f1"
+                                                radius={[10, 10, 0, 0]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+
+                                    {/* 🔥 TOOLTIP EXTERNO */}
+                                    {tooltipData && (
+                                        <div
+                                            className="absolute z-50 pointer-events-auto"
+                                            style={{
+                                                left: tooltipPosition.x + 16,
+                                                top: tooltipPosition.y - 40,
+                                            }}
+                                            onMouseEnter={() => setIsTooltipHovered(true)}
+                                            onMouseLeave={() => {
+                                                setIsTooltipHovered(false);
+                                                setTooltipData(null);
+                                            }}
+                                        >
+                                            <TooltipModalidade
+                                                active
+                                                payload={[{ payload: tooltipData }]}
+                                                label={tooltipData.modalidade}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </Painel>
+
 
 
 
@@ -551,11 +735,14 @@ export default function DashboardVendasPage() {
                             {loadingRanking ? (
                                 <div className="space-y-3">
                                     {[1, 2, 3].map(i => (
-                                        <div key={i} className="h-20 bg-gray-200 animate-pulse rounded-xl" />
+                                        <div
+                                            key={i}
+                                            className="h-20 bg-gray-200 animate-pulse rounded-xl"
+                                        />
                                     ))}
                                 </div>
                             ) : (
-                                <Painel className="col-span-12 lg:col-span-4">
+                                <Painel className="col-span-12 lg:col-span-4 flex flex-col">
                                     <PainelHeader title="Top Bandeiras" />
 
                                     <FiltroPeriodo
@@ -563,7 +750,19 @@ export default function DashboardVendasPage() {
                                         setPeriodo={setPeriodoRanking}
                                     />
 
-                                    <div className="space-y-4 mt-6">
+                                    {/* 🔽 CONTAINER COM SCROLL */}
+                                    <div
+                                        className="
+                mt-6
+                space-y-4
+                max-h-[420px]
+                overflow-y-auto
+                pr-2
+                scrollbar-thin
+                scrollbar-thumb-primary/30
+                scrollbar-track-transparent
+            "
+                                    >
                                         {rankingFiltrado.map((b, index) => {
                                             const percentual =
                                                 Math.min(
@@ -580,12 +779,18 @@ export default function DashboardVendasPage() {
                                                     transition={{ duration: 0.35, delay: index * 0.06 }}
                                                     whileHover={{
                                                         y: -6,
-                                                        transition: { type: "spring", stiffness: 300, damping: 20 },
+                                                        transition: {
+                                                            type: "spring",
+                                                            stiffness: 300,
+                                                            damping: 20,
+                                                        },
                                                     }}
-                                                    className="relative overflow-hidden rounded-2xl
-                               bg-gradient-to-br from-primary/5 to-white
-                               shadow-sm hover:shadow-xl transition-shadow
-                               will-change-transform"
+                                                    className="
+                            relative overflow-hidden rounded-2xl
+                            bg-gradient-to-br from-primary/5 to-white
+                            shadow-sm hover:shadow-xl transition-shadow
+                            will-change-transform
+                        "
                                                 >
                                                     {/* Barra lateral */}
                                                     <div className="absolute left-0 top-0 h-full w-1 bg-primary" />
@@ -593,15 +798,15 @@ export default function DashboardVendasPage() {
                                                     <div className="grid grid-cols-[32px_48px_1fr] gap-4 items-center p-4">
                                                         {/* Ranking */}
                                                         <div className="flex justify-center">
-                            <span className="text-lg font-extrabold text-primary">
-                                #{b.ranking}
-                            </span>
+                                <span className="text-lg font-extrabold text-primary">
+                                    #{b.ranking}
+                                </span>
                                                         </div>
 
                                                         {/* Logo */}
                                                         <div className="flex justify-center">
                                                             <Image
-                                                                src={b.logo}
+                                                                src={stringSvgToDataUrl(b.logo)}
                                                                 alt={b.bandeira}
                                                                 width={40}
                                                                 height={40}
@@ -641,35 +846,64 @@ export default function DashboardVendasPage() {
                             )}
 
 
-                            <Painel className="col-span-12">
-                                <PainelHeader title="Ticket Médio por Bandeira"/>
-                                <FiltroPeriodo
-                                    periodo={periodoTicketMedio}
-                                    setPeriodo={setPeriodoTicketMedio}
-                                />
 
-                                <div className="flex gap-6 my-6">
-                                    <ComparativoResumo comparativo={ticketComparativo}/>
+                            <Painel className="col-span-12">
+                                {/* HEADER COM AÇÃO */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <PainelHeader title="Ticket Médio por Bandeira" />
+
+                                    <button
+                                        onClick={() => setOrdenarPorRentabilidade(v => !v)}
+                                        className={`
+                px-4 py-2 rounded-lg text-sm font-semibold transition whitespace-nowrap
+                ${ordenarPorRentabilidade
+                                            ? "bg-red-600 text-white shadow"
+                                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"}
+            `}
+                                        title="Considera ticket médio, volume de transações e taxa"
+                                    >
+                                        Ordenar por maior rentabilidade
+                                    </button>
                                 </div>
 
-                                <ResponsiveContainer height={300}>
-                                    <BarChart data={ticketMedio}>
-                                        <CartesianGrid strokeDasharray="3 3"/>
-                                        <XAxis dataKey="bandeira"/>
-                                        <YAxis/>
-                                        <Tooltip
-                                            formatter={(value) => [
-                                                `R$ ${Number(value).toLocaleString("pt-BR")}`,
-                                                "Ticket Médio",
-                                            ]}
+                                {/* FILTRO */}
+                                <div className="mb-6">
+                                    <FiltroPeriodo
+                                        periodo={periodoTicketMedio}
+                                        setPeriodo={setPeriodoTicketMedio}
+                                    />
+                                </div>
+
+                                {/* GRÁFICO */}
+                                <ResponsiveContainer height={320}>
+                                    <LineChart
+                                        data={ticketMedioExibido}
+                                        margin={{ top: 20, right: 20, left: 10, bottom: 10 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" />
+
+                                        <XAxis
+                                            dataKey="bandeira"
+                                            tick={{ fontSize: 12 }}
                                         />
-                                        <Bar
+
+                                        <YAxis
+                                            tickFormatter={(v) =>
+                                                `R$ ${Number(v).toLocaleString("pt-BR")}`
+                                            }
+                                        />
+
+                                        <Tooltip content={<TicketMedioTooltip ordenarPorRentabilidade={ordenarPorRentabilidade} />} />
+
+                                        <Line
+                                            type="monotone"
                                             dataKey="ticketMedio"
-                                            label={"Ticket Medio"}
-                                            fill="#dc2626"
-                                            radius={[10, 10, 0, 0]}
+                                            stroke="#dc2626"
+                                            strokeWidth={3}
+                                            dot={{ r: 4 }}
+                                            activeDot={{ r: 6 }}
                                         />
-                                    </BarChart>
+                                    </LineChart>
                                 </ResponsiveContainer>
                             </Painel>
                         </div>
@@ -679,37 +913,6 @@ export default function DashboardVendasPage() {
         </>
     );
 
-}
-
-/* =========================
-   COMPONENTES
-========================= */
-
-function KPIComparativo({
-                            label,
-                            value,
-                            isPercent,
-                        }: {
-    label: string;
-    value: number;
-    isPercent?: boolean;
-}) {
-    const {atual, anterior} = calcularComparativo(value);
-    const diff = percentualDiff(atual, anterior);
-
-    return (
-        <motion.div whileHover={{y: -4}} className="bg-white rounded-2xl p-6 shadow">
-            <p className="text-sm text-gray-500">{label}</p>
-            <p className="text-3xl font-bold mt-1">
-                {isPercent
-                    ? `${atual.toFixed(2)}%`
-                    : `R$ ${atual.toLocaleString("pt-BR")}`}
-            </p>
-            <p className={`text-sm mt-2 ${diff >= 0 ? "text-green-600" : "text-red-600"}`}>
-                {diff >= 0 ? "▲" : "▼"} {diff.toFixed(2)}% vs período anterior
-            </p>
-        </motion.div>
-    );
 }
 
 function ComparativoResumo({comparativo}: { comparativo: ResumoComparativo }) {
