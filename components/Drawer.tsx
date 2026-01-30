@@ -42,6 +42,8 @@ export default function Drawer({isOpen, setIsOpen}: DrawerDesktopProps) {
 
     const {usuario} = usePermissoes();
 
+    if (!usuario) return null;
+
     const permissoes = usuario?.permissoes;
 
     function isMobile() {
@@ -68,8 +70,8 @@ export default function Drawer({isOpen, setIsOpen}: DrawerDesktopProps) {
                 },
                 {
                     icon: ChartNoAxesCombined,
-                    label: 'Dashboard',
-                    href: '/dashboard',
+                    label: 'Dashboard Vendas',
+                    href: '/dashboard/vendas',
                     tag: 1001
                 }
             ]

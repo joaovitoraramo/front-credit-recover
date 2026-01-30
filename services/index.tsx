@@ -1,3 +1,5 @@
+// services/index.tsx
+
 'use client';
 
 export const getPadrao = async (uri: string) => {

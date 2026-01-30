@@ -42,9 +42,16 @@ export default function PaginaInicial() {
             tag: 1003,
         },
         {
-            label: 'Relatórios',
-            descricao: 'Indicadores e análises',
-            href: '/dashboard',
+            label: 'Relatório de Vendas',
+            descricao: 'Indicadores e análises de vendas',
+            href: '/dashboard/vendas',
+            icon: BarChart2,
+            tag: 1001,
+        },
+        {
+            label: 'Relatório de Recebimentos',
+            descricao: 'Indicadores e análises de recebimentos',
+            href: '/dashboard/recebimentos',
             icon: BarChart2,
             tag: 1001,
         },
@@ -74,7 +81,7 @@ export default function PaginaInicial() {
     );
 
     return (
-        <div className="min-h-screen w-full bg-gradient-to-br from-[#0F172A] via-[#020617] to-black relative overflow-hidden">
+        <div className="min-h-screen pl-[64px] w-full bg-gradient-to-br from-[#0F172A] via-[#020617] to-black relative overflow-hidden">
 
             {/* Ambient lights */}
             <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-primary/30 rounded-full blur-[140px]" />
