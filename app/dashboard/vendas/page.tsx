@@ -266,7 +266,10 @@ export default function DashboardVendasPage() {
         const isGood = invertColors ? !isUp : isUp;
 
         return (
-            <motion.div whileHover={{ y: -4 }} className="bg-white rounded-2xl p-6 shadow">
+            <motion.div
+                whileHover={{ y: -4 }}
+                className="group relative bg-white rounded-2xl p-6 shadow"
+            >
                 <p className="text-sm text-gray-500">{label}</p>
 
                 <p className="text-3xl font-bold mt-1">
@@ -282,8 +285,24 @@ export default function DashboardVendasPage() {
                 >
                     {isUp ? "▲" : "▼"} {Math.abs(diff).toFixed(2)}% vs período anterior
                 </p>
+
+                {/* Texto explicativo flutuante */}
+                <p
+                    className="
+        pointer-events-none
+        absolute left-6 bottom-2
+        text-xs text-gray-400
+        opacity-0 translate-y-1
+        transition-all duration-200
+        group-hover:opacity-100 group-hover:translate-y-0
+    "
+                >
+                    Comparação com o mesmo período do mês anterior
+                </p>
             </motion.div>
         );
+
+
     }
 
 
